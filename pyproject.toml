@@ -5,7 +5,7 @@ description = "Кейс: Прием учетных документов"
 authors = [
     "Andrey Donskoy <donskoi.com@gmail.com>",
     "Medvedev Artem <...@gmail.com>",
-    "Ramazanov Ali <...@gmail.com>",
+    "Ramazanov Ali <ali_ramazanov_2000@mail.com>",
 ]
 
 [tool.poetry.dependencies]
