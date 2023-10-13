@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "documents_parser"
+version = "0.1.0"
+description = "Кейс: Прием учетных документов"
+authors = [
+    "Andrey Donskoy <donskoi.com@gmail.com>",
+    "Medvedev Artem <...@gmail.com>",
+    "Ramazanov Ali <...@gmail.com>",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+pandas = "^2.1.1"
+matplotlib = "^3.8.0"
+seaborn = "^0.13.0"
+numpy = "^1.26.0"
+scikit-learn = "^1.3.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.4.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
