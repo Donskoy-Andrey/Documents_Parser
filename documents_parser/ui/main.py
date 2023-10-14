@@ -48,6 +48,12 @@ class Gui:
             title.title("Прием учетных документов «AAA Team»")
             # we.image(str(SRC_PATH / "img.png"), width=100, output_format="PNG")
             logo.image(str(SRC_PATH / "logo.png"), width=150, output_format="PNG")
+            self.option = st.selectbox(
+                "Выберите тип документа",
+                ("М-11", "ФМУ-76"),
+                index=None,
+                placeholder="Выберите тип документа...",
+            )
 
         self.draw_choose_file()
 
@@ -58,6 +64,7 @@ class Gui:
                 on_click=lambda: self.run_file_processing(),
                 disabled=self.button_disabled
             )
+
 
     def draw_choose_file(self) -> None:
         """
@@ -75,7 +82,8 @@ class Gui:
             filename = self.uploaded_file.name
             with self.button_container:
                 st.write("Выбранный файл:", filename)
-            self.button_disabled = False
+            if self.option:
+                self.button_disabled = False
 
         else:
             st.write("Не выбран файл")
@@ -95,7 +103,7 @@ class Gui:
         with self.button_container:
             # loading gif :)
             gif_runner = st.image(gif_path)
-
+        print(f"{self.option=}")
         df = ocr(pdf_path=str(DOWNLOAD_FILENAME))
         df_list = table_ocr(path=str(DOWNLOAD_FILENAME))
 
@@ -122,10 +130,13 @@ class Gui:
         for dataframe in df_list:
             unvalidated_t, reason_t = validate_tables_m11(dataframe)
             unvalidated_list.append(unvalidated_t)
+            is_accept += len(unvalidated_t)
             reasons_list.append(reason_t)
 
         def highlight_survived(s):
-            return ['']*len(s) if s["Название"] not in unvalidated_row else ['background-color: tomato;text-color: black;'] * len(s)
+            return [''] * len(s) if s["Название"] not in unvalidated_row else [
+                                                                                  'background-color: tomato;text-color: black;'] * len(
+                s)
 
         def color_survived(val, df, unvalidated):
             color = 'background-color: tomato;text-color: black;'
@@ -135,14 +146,18 @@ class Gui:
                     return color
             return ''
 
-            return ['']*len(s) if s["Название"] not in unvalidated_row else ['background-color: tomato;text-color: black;'] * len(s)
+
 
         if df is not None:
             if is_accept == 0:
-                self.data_container.markdown('<h2 style="color:white;background-color:green;text-align:center">Принято</h2>', unsafe_allow_html=True)
+                self.data_container.markdown(
+                    '<h2 style="color:white;background-color:green;text-align:center">Принято</h2>',
+                    unsafe_allow_html=True)
                 # self.data_container.markdown('_____', )
             else:
-                self.data_container.markdown('<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>', unsafe_allow_html=True)
+                self.data_container.markdown(
+                    '<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>',
+                    unsafe_allow_html=True)
 
         with self.data_container:
             if len(reasons_row) != 0:
@@ -173,10 +188,9 @@ class Gui:
                 dataframe = df_list[i]
                 unvalidated_t = unvalidated_list[i]
                 reason_t = reasons_list[i]
-                print(f"{unvalidated_t=} {reason_t}")
                 try:
-                    # print(dataframe.columns)
-                    st.dataframe(dataframe.style.map(lambda x: color_survived(x, dataframe, unvalidated_t)),hide_index=True)
+                    st.dataframe(dataframe.style.map(lambda x: color_survived(x, dataframe, unvalidated_t)),
+                                 hide_index=True)
 
                 except Exception as e:
                     print(e)
@@ -190,7 +204,7 @@ class Gui:
         # Embedding PDF in HTML
         pdf_display = F'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
         with self.button_container:
-        # Displaying File
+            # Displaying File
             st.markdown(pdf_display, unsafe_allow_html=True)
 
 

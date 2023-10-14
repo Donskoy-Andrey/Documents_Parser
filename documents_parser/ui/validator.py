@@ -184,7 +184,6 @@ def validate_dataframe_m11_2(dataframe: pd.DataFrame):
             continue
         corresponding_account = [col for col in dataframe.columns if "Корреспондирующий счет" in col]
         for col in corresponding_account:
-            print("aaaa ", row[col])
             if (not row[col].replace(" ", "").replace("\n", "").isdigit()
                     and row[col] != "-"):
                 unvalidated.append((index, col))
@@ -208,22 +207,17 @@ def validate_dataframe_m11_2(dataframe: pd.DataFrame):
         for col in prices:
             try:
                 if len(row[col].replace("\n", "").replace(" ", "").split(",")) != 2:
-                    print("aaaaaa ", row[col])
                     unvalidated.append((index, col))
                     reasons.append(f"{col}: Неправильный денежный формат (руб,коп)")
                 else:
                     rub, kop = row[col].split(",")
                     rub = rub.replace(" ", "").replace("\n", "")
                     kop = kop.replace(" ", "").replace("\n", "")
-                    print(f'{rub=} {rub.isdigit()=} {kop=} {kop.isdigit()=} {not rub.isdigit() or not kop.isdigit()}')
                     if not rub.isdigit() or not kop.isdigit():
-                        print(f"{rub=} {rub.isdigit()=}")
                         unvalidated.append((index, col))
                         reasons.append(f"{col}: Неправильный денежный формат (руб,коп)")
 
             except AttributeError:
-                print('here ', row[col])
-
                 unvalidated.append((index, col))
                 reasons.append(f"{col}: Неправильный денежный формат (руб,коп)")
     return unvalidated, reasons
