@@ -101,10 +101,10 @@ class Gui:
 
         gif_runner.empty()  # finish gif
         self.button_container.empty()
-        self.draw_results(df, df_list)
+        self.draw_results_m11(df, df_list)
         self.uploaded_file = None
 
-    def draw_results(self, df: pd.DataFrame, df_list: list) -> None:
+    def draw_results_m11(self, df: pd.DataFrame, df_list: list) -> None:
         """
         draw results of document parser func
         :param df: df with results of from parser func
@@ -114,11 +114,28 @@ class Gui:
             None
         """
 
-        unvalidated, reasons = validate(df)
-        is_accept = len(unvalidated)
+        unvalidated_row, reasons_row = validate_raw_data_m11(df)
+        is_accept = len(unvalidated_row)
+
+        unvalidated_list = []
+        reasons_list = []
+        for dataframe in df_list:
+            unvalidated_t, reason_t = validate_tables_m11(dataframe)
+            unvalidated_list.append(unvalidated_t)
+            reasons_list.append(reason_t)
 
         def highlight_survived(s):
-            return ['']*len(s) if s["Название"] not in unvalidated else ['background-color: tomato;text-color: black;'] * len(s)
+            return ['']*len(s) if s["Название"] not in unvalidated_row else ['background-color: tomato;text-color: black;'] * len(s)
+
+        def color_survived(val, df, unvalidated):
+            color = 'background-color: tomato;text-color: black;'
+            for coord in unvalidated:
+                index, col = coord[0], coord[1]
+                if df.loc[index, col] == val:
+                    return color
+            return ''
+
+            return ['']*len(s) if s["Название"] not in unvalidated_row else ['background-color: tomato;text-color: black;'] * len(s)
 
         if df is not None:
             if is_accept == 0:
@@ -128,13 +145,16 @@ class Gui:
                 self.data_container.markdown('<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>', unsafe_allow_html=True)
 
         with self.data_container:
-            if len(reasons) != 0:
-                if len(reasons) < 2:
+            if len(reasons_row) != 0:
+                if len(reasons_row) < 2:
                     st.markdown('<h1 style="text-align:center">Причина:<h1>', unsafe_allow_html=True)
                 else:
                     st.markdown('<h1 style="text-align:center">Причины:<h1>', unsafe_allow_html=True)
-                for reason in reasons:
+                for reason in reasons_row:
                     st.markdown(f'- {reason}')
+                for reasons in reasons_list:
+                    for reason in reasons:
+                        st.markdown(f'- {reason}')
 
         self.data_container.markdown('_____', )
         df = df.reset_index().rename({"index": "Название"}, axis=1)
@@ -149,10 +169,14 @@ class Gui:
                 hide_index=True
             )
         with self.data_container:
-            for dataframe in df_list:
+            for i in range(len(df_list)):
+                dataframe = df_list[i]
+                unvalidated_t = unvalidated_list[i]
+                reason_t = reasons_list[i]
+                print(f"{unvalidated_t=} {reason_t}")
                 try:
-                    print(dataframe.columns)
-                    st.dataframe(dataframe, hide_index=True)
+                    # print(dataframe.columns)
+                    st.dataframe(dataframe.style.map(lambda x: color_survived(x, dataframe, unvalidated_t)),hide_index=True)
 
                 except Exception as e:
                     print(e)
