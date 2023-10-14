@@ -222,10 +222,12 @@ class Gui:
         unvalidated_list = []
         reasons_list = []
         for dataframe in df_list:
-            unvalidated_t, reason_t = validate_raw_fmu_76(dataframe)
+            unvalidated_t, reason_t = validate_tables_fmu_76(dataframe)
             unvalidated_list.append(unvalidated_t)
             is_accept += len(unvalidated_t)
             reasons_list.append(reason_t)
+        print(f"{unvalidated_list=}  {reasons_list=}")
+
         def highlight_survived(s):
             return (
                 [''] * len(s) if s["Название"] not in unvalidated_row
@@ -287,6 +289,8 @@ class Gui:
                 except Exception as e:
                     print(e)
                     raise e
+        with self.data_container:
+            self.displayPDF(DOWNLOAD_FILENAME)
 
     def displayPDF(self, file):
         # Opening file from file path
@@ -294,10 +298,9 @@ class Gui:
             base64_pdf = base64.b64encode(f.read()).decode('utf-8')
 
         # Embedding PDF in HTML
-        pdf_display = F'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
-        with self.button_container:
+        pdf_display = F'<div style="display: flex; justify-content: center;"><embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></div>'
             # Displaying File
-            st.markdown(pdf_display, unsafe_allow_html=True)
+        st.markdown(pdf_display, unsafe_allow_html=True)
 
 
 def main():

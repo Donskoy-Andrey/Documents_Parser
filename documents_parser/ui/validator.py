@@ -239,7 +239,111 @@ def validate_raw_fmu_76(dataframe: pd.DataFrame):
     reasons = []
     return unvalidated, reasons
 
+def identify_df_fmu(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
+    # print(f"{dataframe.columns=}")
+    if dataframe.columns[0] in ["Структурное подразделение (цех, участок и др.)"]:
+        return 1
+    elif dataframe.columns[0] in ['Технический счет 32 "Затраты"',]:
+        return 2
+    return 3
+
+def validate_dataframe_fmu_1(df: pd.DataFrame):
+    reasons = []
+    unvalidated = []
+    for index, row in df.iterrows():
+        if len(row["Структурное подразделение (цех, участок и др.)"]) < 3:
+            unvalidated.append((index, "Структурное подразделение (цех, участок и др.)"))
+            reasons.append(f"Структурное подразделение (цех, участок и др.): Неправильное название организации")
+        if not row["Код операции"].isdigit():
+            unvalidated.append((index, "Код операции"))
+            reasons.append(f"Код операции: Допустимы только цифры!")
+        if row["Корреспондирующий счет (Cчет, субчет)"].isdigit():
+            pass
+        else:
+            unvalidated.append((index, "Корреспондирующий счет (Cчет, субчет)"))
+            reasons.append(f"Корреспондирующий счет (Cчет, субчет): Некорректно задан")
+        if row["Корреспондирующий счет (Статья расходов/носитель затрат)"].isdigit():
+            pass
+        else:
+            unvalidated.append((index, "Корреспондирующий счет (Статья расходов/носитель затрат)"))
+            reasons.append(f"Корреспондирующий счет (Статья расходов/носитель затрат): Допустимы только цифры!")
+    return unvalidated, reasons
+
+"""
+['
+      
+       'Корреспондирующий счет(код аналитического учета)',
+       'Материальные ценности (наименование, сорт, размер, марка)',
+       
+       'Заводской номер детали', 
+      
+       
+       'Отклонение фактического расхода от нормы ("-" экономия,"+" перерасход)',
+       'Вид работ или ремонта, содержание хозяйственной операции',
+       'Срок полезного использования использования, причина отклонения в расходе и другое',
+       'Регистрационный номерпартии товара,подлежащего прослеживаемости'],
+"""
+
+def validate_dataframe_fmu_2(df: pd.DataFrame):
+    reasons = []
+    unvalidated = []
+    numeric_fields = [
+        'Технический счет 32 "Затраты"',
+        'Корреспондирующий счет (Cчет, субчет)',
+        'Материальные ценности (номенклатурный номер)',
+        'Единица измерения (код)',
+    ]
+    float_fields = [
+        'Нормативное количество',
+        'Фактически израсходованно (Количество)',
+        'Отклонение фактического расхода от нормы ("-" экономия,"+" перерасход)'
+    ]
+    money_fields = [
+        'Фактически израсходованно (Цена, руб.коп)',
+        'Фактически израсходованно (Сумма, руб.коп)',
+    ]
+    for index, row in df.iterrows():
+        if index == 2:
+            continue
+
+        for col in numeric_fields:
+            if row[col].isnumeric():
+                pass
+            else:
+                unvalidated.append((index, col))
+                reasons.append(f'{col}: Допустимы только цифры!')
+
+        for col in float_fields:
+            if check_float(row[col]) and len(row[col].split('.')[-1]) == 3:
+                pass
+            else:
+                unvalidated.append((index, col))
+                reasons.append(f'{col}: Пример формата: 1.000')
+        for col in money_fields:
+            if check_float(row[col]):
+                pass
+            else:
+                unvalidated.append((index, col))
+                reasons.append(f'{col}: Не число!')
+
+        if row['Производстенный заказ'].isalnum():
+            pass
+        else:
+            col = 'Производстенный заказ'
+            unvalidated.append((index, col))
+            reasons.append(f'{col}: Допустимы только цифры!')
+    return [], []
+
 def validate_tables_fmu_76(dataframe: pd.DataFrame):
+    df_type = identify_df_fmu(dataframe)
+    # print(f"{df_type=}")
+    if df_type == 1:
+        return validate_dataframe_fmu_1(dataframe)
+    elif df_type == 2:
+        return validate_dataframe_fmu_2(dataframe)
+    else:
+        return "Wrong", "Wrong"
+    print(dataframe.columns)
     unvalidated = []
     reasons = []
     return unvalidated, reasons
