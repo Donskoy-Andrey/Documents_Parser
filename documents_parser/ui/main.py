@@ -159,6 +159,7 @@ class Gui:
             return ''
 
         if df is not None:
+            print(f"{is_accept=}")
             if is_accept == 0:
                 self.data_container.markdown(
                     '<h2 style="color:white;background-color:green;text-align:center">Принято</h2>',
@@ -170,8 +171,9 @@ class Gui:
                     unsafe_allow_html=True)
 
         with self.data_container:
-            if len(reasons_row) != 0:
-                if len(reasons_row) < 2:
+            print("here")
+            if is_accept != 0:
+                if is_accept < 2:
                     st.markdown('<h1 style="text-align:center">Причина:<h1>', unsafe_allow_html=True)
                 else:
                     st.markdown('<h1 style="text-align:center">Причины:<h1>', unsafe_allow_html=True)
@@ -298,7 +300,7 @@ class Gui:
             base64_pdf = base64.b64encode(f.read()).decode('utf-8')
 
         # Embedding PDF in HTML
-        pdf_display = F'<div style="display: flex; justify-content: center;"><embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></div>'
+        pdf_display = F'<div style="display: flex; justify-content: center;"><embed src="data:application/pdf;base64,{base64_pdf}" width="500" height="800" type="application/pdf"></div>'
             # Displaying File
         st.markdown(pdf_display, unsafe_allow_html=True)
 
