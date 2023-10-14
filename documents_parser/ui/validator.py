@@ -114,7 +114,10 @@ def identify_df(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
 
 
 def check_date(date: str) -> bool:
-    day, month, year = date.split(".")
+    try:
+        day, month, year = date.split(".")
+    except ValueError:
+        return False
     try:
         if len(day) > 2 or int(day) < 1 or int(day) > 31:
             return False
@@ -254,12 +257,13 @@ def check_post(value:str):
         return False
 
 def check_name(value:str):
-    names = value.split('')
+    names = value.split(' ')
     for i in names:
-        if i[0] == i[0].lower():
+        if len(i) <= 1 or i[0] == i[0].lower():
             return False
-    return  True
+    return True
 def validate_raw_fmu_76(dataframe: pd.DataFrame):
+    print(dataframe)
     unvalidated = []
     reasons = []
     col_name = "Значение"
@@ -281,7 +285,7 @@ def validate_raw_fmu_76(dataframe: pd.DataFrame):
                 reasons.append("Номер акта не является  натуральным числом")
         elif index == "Дата акта":
             if not check_date(value):
-                unvalidated.append((index, "Дата акта"))
+                unvalidated.append(index)
                 reasons.append("Неверная дата акта")
         elif index == "Организация":
             if not check_organization(value):
@@ -289,21 +293,20 @@ def validate_raw_fmu_76(dataframe: pd.DataFrame):
                 reasons.append("Неверное название организации")
         elif index == "Структурное подразделение":
             if not check_structure_department(value):
-                unvalidated.append((index, "Структурное подразделение"))
+                unvalidated.append(index)
                 reasons.append("Структурное подразделение не является Северо- Кавказским")
         elif index == "Утверждено (должность)":
             if not check_post(value):
-                unvalidated.append((index, "Утверждено (должность)"))
+                unvalidated.append(index)
                 reasons.append("Утверждено не начальником")
-        elif index == "Утверждено (должность)":
+        elif index == "Утверждено (ФИО)":
             if not check_name(value):
-                unvalidated.append((index, "Утверждено (ФИО)"))
-                reasons.append("ФИО написано с прописной буквы")
+                unvalidated.append(index)
+                reasons.append("Некорректно заполнено ФИО")
         elif index == "Утверждено (дата)":
             if not check_date(value):
-                unvalidated.append((index, "Утверждено (дата)"))
+                unvalidated.append(index)
                 reasons.append("Неверная дата утверждения")
-
         elif "Коды" in index:
             if not check_float(value):
                 unvalidated.append(index)
