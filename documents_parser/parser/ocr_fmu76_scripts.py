@@ -79,12 +79,20 @@ def parse_hat(img: np.ndarray) -> str | None:
 
 def parse_codes(img, down) -> dict:
     codes = extract_text(img[70: down + 10, 1980:-180])
+    print(f"kjfealkjfadsbjdsfa    {codes=}")
     codes = codes.split()
-    codes_dict = {
-        "ОКУД": codes[1],
-        "ОКПО": codes[2],
-        "БЕ": codes[3],
-    }
+    try:
+        codes_dict = {
+            "ОКУД": codes[1],
+            "ОКПО": codes[2],
+            "БЕ": codes[3],
+        }
+    except IndexError:
+        codes_dict = {
+            "ОКУД": codes[0],
+            "ОКПО": codes[1],
+            "БЕ": codes[2],
+        }
     return codes_dict
 
 
@@ -116,7 +124,7 @@ def parse_act(img, up: int) -> (int, str):
     x1 = 1040
     x2 = 1300
     text = extract_text(img[up + 140:up + 180, x1:x2])
-    text = text.replace("|", " ")
+    text = text.replace("|", " ").replace("—", "")
     number, act_date = text.split()
     return number, act_date
 
