@@ -240,6 +240,16 @@ def validate_tables_m11(dataframe: pd.DataFrame):
     else:
         return "Wrong", "Wrong"
 
+def validate_raw_fmu_76(dataframe: pd.DataFrame):
+    unvalidated = []
+    reasons = []
+    return unvalidated, reasons
+
+def validate_tables_fmu_76(dataframe: pd.DataFrame):
+    unvalidated = []
+    reasons = []
+    return unvalidated, reasons
+
 
 if __name__ == '__main__':
     df = pd.read_csv('src/report.csv', index_col=0)
