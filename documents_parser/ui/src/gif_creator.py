@@ -1,19 +1,21 @@
 from PIL import Image
 
-image_path = 'img.png'
-ico_path = 'icon.ico'
+image_path = 'back.png'
+ico_path = 'train.png'
 output_path = 'output.png'
 
 def place_ico_on_image(image_path, ico_path, step, i):
     # Open the image and ICO files
     image = Image.open(image_path)
-    ico = Image.open(ico_path)
+    ico = Image.open(ico_path).resize((200,200))
+    print(ico.size)
+    print(image.size)
 
     # Resize the ICO to a desired size (optional)
     # ico = ico.resize((50, 50))
 
     # Calculate the position to place the ICO on the image
-    position = (0 + step, 0)
+    position = (0 + step, -30)
     print(step)
     # Paste the ICO onto the image at the calculated position
     image.paste(ico, position, mask=ico)

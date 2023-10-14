@@ -90,7 +90,8 @@ class Gui:
         with open(DOWNLOAD_FILENAME, 'wb+') as f:
             # save file to local machine
             f.write(self.uploaded_file.read())
-        gif_path = "https://donskow.com/g"
+        # gif_path = "https://donskow.com/g"
+        gif_path = "https://donskow.com/train4"
         with self.button_container:
             # loading gif :)
             gif_runner = st.image(gif_path)
