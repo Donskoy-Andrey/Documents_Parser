@@ -57,8 +57,10 @@ def table_ocr_m11(path: str | None) -> list[pd.DataFrame]:
 
     tables[0].columns = columns_table1_m11
     tables[0].drop([0,1], axis=0, inplace=True)
+    tables[0].reset_index(inplace=True)
     tables[1].columns = columns_table2_m11
     tables[1].drop([0,1], axis=0, inplace=True)
+    tables[1].reset_index(inplace=True)
     return cler_DataFrame(tables[:2])
 
 
@@ -87,9 +89,11 @@ def table_ocr_fmu76(path: str | None) -> list[pd.DataFrame]:
     tables[0].drop([0,1],axis=0, inplace=True)
     tables[0].columns = columns_table1_fmu76[:-1]
     tables[0][columns_table1_fmu76[-1]] = table1_fmy_2_2[-1]
+    tables[0].reset_index(inplace=True)
 
     tables[1].columns = columns_table2_fmu76
     tables[1].drop([0,1], axis=0, inplace=True)
+    tables[1].reset_index(inplace=True)
     # print(tables[1].to_excel("data/ali2.xlsx"))
     return cler_DataFrame(tables[:2])
 
