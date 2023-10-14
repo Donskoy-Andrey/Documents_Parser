@@ -35,19 +35,25 @@ def table_ocr(path: str | None) -> list[pd.DataFrame]:
     index = 1
     while index < len(tables):
         if tables[index-1].shape[1] == tables[index].shape[1]:
-            tables[index - 1] = pd.concat([tables[index-1],tables[index].iloc[2:]])
+            tab = tables[index].iloc[3:]
+            if len(tab.iloc[0, 0]) == 0:
+                line2 = tab.iloc[0,:]
+                for i, val in enumerate(line2):
+                    tables[index - 1].iloc[-1,i] += str(val)
+                tables[index - 1] = pd.concat([tables[index - 1], tables[index].iloc[4:]])
+            else:
+                tables[index - 1] = pd.concat([tables[index-1],tables[index].iloc[3:]])
             del tables[index]
         else:
             index += 1
     # tables = tables[1:-1]
-    if len(tables)==2:
-        # tables[0].columns = tables[0].loc[0, :].values
-        # tables[0].drop(0, axis=0, inplace=True)
-        tables[0].columns = columns_table1
-        tables[0].drop(0, axis=0, inplace=True)
-        tables[1].columns = columns_table2
-        tables[1].drop([0,1], axis=0, inplace=True)
-    return tables
+
+
+    tables[0].columns = columns_table1
+    tables[0].drop([0,1], axis=0, inplace=True)
+    tables[1].columns = columns_table2
+    tables[1].drop([0,1], axis=0, inplace=True)
+    return tables[0:2]
 
 
 if __name__ == '__main__':
