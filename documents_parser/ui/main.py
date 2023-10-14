@@ -3,9 +3,9 @@ import streamlit as st
 from pathlib import Path
 import base64
 import random
-from documents_parser.ui.validator import validate_raw_data_m11, validate_tables_m11
-from documents_parser.parser.ocr_scripts import ocr
-from documents_parser.parser.table_parser import table_ocr
+from documents_parser.ui.validator import validate
+from documents_parser.parser.ocr_m11_scripts import ocr_m11
+from documents_parser.parser.table_parser import table_ocr_m
 
 SRC_PATH = Path(__file__).parent / "src"
 DOWNLOAD_FILENAME = Path("data/file.pdf")
@@ -96,8 +96,8 @@ class Gui:
             # loading gif :)
             gif_runner = st.image(gif_path)
 
-        df = ocr(pdf_path=str(DOWNLOAD_FILENAME))
-        df_list = table_ocr(path=str(DOWNLOAD_FILENAME))
+        df = ocr_m11(pdf_path=str(DOWNLOAD_FILENAME))
+        df_list = table_ocr_m(path=str(DOWNLOAD_FILENAME))
 
         gif_runner.empty()  # finish gif
         self.button_container.empty()
