@@ -44,9 +44,9 @@ class Gui:
         :return: None
         """
         with self.head_container:
-            title, we, logo = st.columns([5, 1, 1])
-            title.title("File Uploader by \"AAA_Team\"")
-            we.image(str(SRC_PATH / "img.png"), width=100, output_format="PNG")
+            title, logo = st.columns([5, 1])
+            title.title("Прием учетных документов «AAA Team»")
+            # we.image(str(SRC_PATH / "img.png"), width=100, output_format="PNG")
             logo.image(str(SRC_PATH / "logo.png"), width=150, output_format="PNG")
 
         self.draw_choose_file()
@@ -90,7 +90,8 @@ class Gui:
         with open(DOWNLOAD_FILENAME, 'wb+') as f:
             # save file to local machine
             f.write(self.uploaded_file.read())
-        gif_path = "https://donskow.com/g"
+        # gif_path = "https://donskow.com/g"
+        gif_path = "https://donskow.com/train4"
         with self.button_container:
             # loading gif :)
             gif_runner = st.image(gif_path)
@@ -113,7 +114,7 @@ class Gui:
             None
         """
 
-        unvalidated = validate(df)
+        unvalidated, reasons = validate(df)
         is_accept = len(unvalidated)
 
         def highlight_survived(s):
@@ -121,14 +122,24 @@ class Gui:
 
         if df is not None:
             if is_accept == 0:
-                self.result_container.markdown('<h2 style="color:white;background-color:green;text-align:center">Принято</h2>', unsafe_allow_html=True)
-                self.data_container.markdown('_____', )
+                self.data_container.markdown('<h2 style="color:white;background-color:green;text-align:center">Принято</h2>', unsafe_allow_html=True)
+                # self.data_container.markdown('_____', )
             else:
-                self.result_container.markdown('<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>', unsafe_allow_html=True)
-                self.data_container.markdown('_____',)
+                self.data_container.markdown('<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>', unsafe_allow_html=True)
+
+        with self.data_container:
+            if len(reasons) != 0:
+                if len(reasons) < 2:
+                    st.markdown('<h1 style="text-align:center">Причина:<h1>', unsafe_allow_html=True)
+                else:
+                    st.markdown('<h1 style="text-align:center">Причины:<h1>', unsafe_allow_html=True)
+                for reason in reasons:
+                    st.markdown(f'- {reason}')
+
+        self.data_container.markdown('_____', )
         df = df.reset_index().rename({"index": "Название"}, axis=1)
 
-        self.data_container.markdown('<h1 style="text-align:center">Описание<h1>', unsafe_allow_html=True)
+        self.data_container.markdown('<h1 style="text-align:center">Отчет<h1>', unsafe_allow_html=True)
         if isinstance(df, pd.DataFrame):
             self.data_container.dataframe(
                 # df.style.set_properties(**{"background-color": "black", "color": "lawngreen"}),

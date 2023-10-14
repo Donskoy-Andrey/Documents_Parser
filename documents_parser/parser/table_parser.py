@@ -53,7 +53,7 @@ def table_ocr(path: str | None) -> list[pd.DataFrame]:
     tables[0].drop([0,1], axis=0, inplace=True)
     tables[1].columns = columns_table2
     tables[1].drop([0,1], axis=0, inplace=True)
-    return tables[0:2]
+    return tables[:2]
 
 
 if __name__ == '__main__':
