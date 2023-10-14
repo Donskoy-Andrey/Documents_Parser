@@ -23,13 +23,13 @@ ORGANIZATION_TYPES = [
     "ФСТЭК"
 ]
 
+
 def check_organization(value: str) -> bool:
     """
 
     :param value:
     :return: return False if wrong organization name
     """
-
 
     if_cor_type = False
     for org_type in ORGANIZATION_TYPES:
@@ -46,6 +46,8 @@ def check_float(candidate):
         float(candidate)
         return True
     except ValueError:
+        return False
+    except TypeError:
         return False
 
 
@@ -71,7 +73,7 @@ def validate(dataframe: pd.DataFrame) -> list[Hashable]:
             if not check_float(value):
                 unvalidated.append(index)
 
-        elif "Документа" in index:
+        elif "документ" in index.lower():
 
             if not check_float(value):
                 unvalidated.append(index)
@@ -86,6 +88,7 @@ def validate(dataframe: pd.DataFrame) -> list[Hashable]:
                 unvalidated.append(index)
 
     return unvalidated
+
 
 if __name__ == '__main__':
     df = pd.read_csv('src/report.csv', index_col=0)

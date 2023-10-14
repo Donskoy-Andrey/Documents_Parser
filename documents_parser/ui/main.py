@@ -1,21 +1,21 @@
-import json
-import random
-import time
 import pandas as pd
-
 import streamlit as st
 from pathlib import Path
-from PIL import Image
 import base64
 import random
 from documents_parser.ui.validator import validate
+from documents_parser.parser.ocr_scripts import ocr
+from documents_parser.parser.table_parser import table_ocr
+
 SRC_PATH = Path(__file__).parent / "src"
-DOWNLOAD_FILENAME = Path("documents_parser/incoming_files/file.pdf")
+DOWNLOAD_FILENAME = Path("data/file.pdf")
+
 
 def test():
     df = pd.read_csv(SRC_PATH / "report.csv", index_col=0)
     accepted = random.randint(0, 1)
     return df
+
 
 class Gui:
     def __init__(self):
@@ -24,11 +24,7 @@ class Gui:
         """
         st.set_page_config(layout='wide')
 
-        with open(SRC_PATH / "historical_data.json") as f:
-            # line = f.readline()
-            self.historical_data = json.load(f)
         self.uploaded_file = None
-        # self.button_status = ButtonStatus(disabled=True)
         self.button_disabled = True
         self.check_button: st.button or None = None
         self.head_container = st.container()
@@ -98,19 +94,23 @@ class Gui:
         with self.button_container:
             # loading gif :)
             gif_runner = st.image(gif_path)
-        df = test() # main document parser func
-        # print(f"seper {self.result}")
+
+        df = ocr(pdf_path=str(DOWNLOAD_FILENAME))
+        df_list = table_ocr(path=str(DOWNLOAD_FILENAME))
+
         gif_runner.empty()  # finish gif
         self.button_container.empty()
-        self.draw_results(df)
+        self.draw_results(df, df_list)
         self.uploaded_file = None
 
-    def draw_results(self, df: pd.DataFrame) -> None:
+    def draw_results(self, df: pd.DataFrame, df_list: list) -> None:
         """
         draw results of document parser func
         :param df: df with results of from parser func
         :param is_accept: returned status of parser func
+        :param df_list: returned list of dataframes with table data
         :return:
+            None
         """
 
         unvalidated = validate(df)
@@ -126,7 +126,7 @@ class Gui:
             else:
                 self.result_container.markdown('<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>', unsafe_allow_html=True)
                 self.data_container.markdown('_____',)
-        df= df.reset_index().rename({"index": "Название"}, axis=1)
+        df = df.reset_index().rename({"index": "Название"}, axis=1)
 
         self.data_container.markdown('<h1 style="text-align:center">Описание<h1>', unsafe_allow_html=True)
         if isinstance(df, pd.DataFrame):
@@ -137,10 +137,12 @@ class Gui:
                 height=500,
                 hide_index=True
             )
-        elif isinstance(df, list):
-            for dataframe in df:
+        with self.data_container:
+            for dataframe in df_list:
                 try:
-                    self.data_container.dataframe(dataframe, hide_index=True)
+                    print(dataframe.columns)
+                    st.dataframe(dataframe, hide_index=True)
+
                 except Exception as e:
                     print(e)
                     raise e
