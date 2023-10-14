@@ -3,7 +3,7 @@ import streamlit as st
 from pathlib import Path
 import base64
 import random
-from documents_parser.ui.validator import validate
+from documents_parser.ui.validator import validate_raw_fata, validate_tables
 from documents_parser.parser.ocr_scripts import ocr
 from documents_parser.parser.table_parser import table_ocr
 
@@ -114,7 +114,7 @@ class Gui:
             None
         """
 
-        unvalidated, reasons = validate(df)
+        unvalidated, reasons = validate_raw_fata(df)
         is_accept = len(unvalidated)
 
         def highlight_survived(s):
@@ -150,8 +150,9 @@ class Gui:
             )
         with self.data_container:
             for dataframe in df_list:
+                validate_tables(dataframe)
                 try:
-                    print(dataframe.columns)
+                    # print(dataframe.columns)
                     st.dataframe(dataframe, hide_index=True)
 
                 except Exception as e:
