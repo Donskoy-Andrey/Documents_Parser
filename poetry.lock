@@ -466,6 +466,20 @@ unicode = ["unicodedata2 (>=15.0.0)"]
 woff = ["brotli (>=1.0.1)", "brotlicffi (>=0.8.0)", "zopfli (>=0.1.4)"]
 
 [[package]]
+name = "ghostscript"
+version = "0.7"
+description = "Interface to the Ghostscript C-API, both high- and low-level, based on ctypes"
+optional = false
+python-versions = "*"
+files = [
+    {file = "ghostscript-0.7-py2.py3-none-any.whl", hash = "sha256:97c70e27ba6b1cab4ab1d9b4cc82d89b8b53e57971f608ded4950b8aa20c78a7"},
+    {file = "ghostscript-0.7.tar.gz", hash = "sha256:b7875a87098740eb0be3de2d9662d15db727305ca9a6d4b7534a3cc33a4b965a"},
+]
+
+[package.dependencies]
+setuptools = ">=38.6.0"
+
+[[package]]
 name = "importlib-resources"
 version = "6.1.0"
 description = "Read resources from Python packages"
@@ -1351,4 +1365,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "a8e06c8c832c2656723c8639df123b98ab9cb36f6a2ea994d9c9a8c6a18012db"
+content-hash = "b71e569080353892165e2014c0c66ecb75c8eafa803650441c26ee0faf085654"

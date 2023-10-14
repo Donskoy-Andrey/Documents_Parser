@@ -2,16 +2,18 @@ import camelot
 import pandas as pd
 import logging
 import os
+
 logging.basicConfig(level=logging.INFO)
 
 
-def cut_table_from_pdf(path:str|None) -> list[pd.DataFrame]:
+def table_ocr(path: str | None) -> list[pd.DataFrame]:
     if path is None:
-        logging.critical('неверный путь')
-        return
+        logging.critical('Неверный путь')
+        return []
     if os.path.split(path)[1].split('.')[-1] != 'pdf':
         logging.critical('Неверный тип файла')
-        return
+        return []
+
     tables = camelot.read_pdf(path,pages='all',)
     tables = [tabl.df for tabl in tables]
     len_colunms_tabl = []
@@ -21,9 +23,9 @@ def cut_table_from_pdf(path:str|None) -> list[pd.DataFrame]:
         len_colunms_tabl.append(tabl.shape[1])
 
     index = 1
-    while index  < len(tables):
+    while index < len(tables):
         if tables[index-1].shape[1] == tables[index].shape[1]:
-            tables[index -1 ] = pd.concat([tables[index-1],tables[index].iloc[2:]])#.iloc[2:]
+            tables[index - 1] = pd.concat([tables[index-1],tables[index].iloc[2:]])
             del tables[index]
         else:
             index += 1
@@ -32,4 +34,8 @@ def cut_table_from_pdf(path:str|None) -> list[pd.DataFrame]:
 
 
 if __name__ == '__main__':
-    cut_table_from_pdf("data/М-11/Принято/М11_123_23.06.2023.pdf")
+    # dfs = cut_table_from_pdf("data/test1.pdf")
+    # print(dfs[0].to_excel("data/ali1.xlsx"))
+    # print(dfs[1].to_excel("data/ali2.xlsx"))
+    # print(dfs[2].to_excel("data/ali3.xlsx"))
+    pass
