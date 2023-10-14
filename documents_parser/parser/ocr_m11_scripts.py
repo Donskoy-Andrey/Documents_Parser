@@ -6,11 +6,7 @@ from pdf2image import convert_from_path
 import cv2
 import numpy as np
 
-logger = logging.getLogger('logger')
-logger.setLevel(logging.INFO)
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-logger.addHandler(ch)
+logger = logging.getLogger("dev")
 
 
 def line_detector(page, threshold: int = 200) -> (list[list], dict):
@@ -167,9 +163,9 @@ def parse_who_get_permission(img: np.ndarray, info: dict) -> str | None:
     return who
 
 
-def ocr(pdf_path: str | None = None) -> pd.DataFrame:
+def ocr_m11(pdf_path: str | None = None) -> pd.DataFrame:
     """
-    Convert pdf file to string variable.
+    Convert pdf file of `M-11` form to string variable.
 
     :param pdf_path: str, path to pdf file.
     :return:
@@ -236,4 +232,3 @@ def ocr(pdf_path: str | None = None) -> pd.DataFrame:
     }).T.rename({0: "Значение"}, axis=1)
 
     return report
-
