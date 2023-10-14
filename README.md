@@ -47,6 +47,15 @@
 </details>
 
 <details>
+  <summary>Установка Tesseract OCR</summary>
+
+    sudo apt-get install tesseract-ocr
+    sudo wget -P /usr/share/tesseract-ocr/4.00/tessdata https://github.com/tesseract-ocr/tessdata/raw/main/rus.traineddata
+
+</details>
+
+
+<details>
   <summary>Запуск проекта</summary>
 
     poetry run python main
