@@ -226,7 +226,7 @@ def validate_dataframe_m11_2(dataframe: pd.DataFrame):
     return unvalidated, reasons
 
 
-def validate_tables_m11(dataframe: pd.DataFrame):
+def validate_tables_m11(dataframe: pd.DataFrame) -> tuple:
     # for dataframe in dataframes:
     df_type = identify_df(dataframe)
     # print(f"{df_type=}")
@@ -238,32 +238,36 @@ def validate_tables_m11(dataframe: pd.DataFrame):
         return "Wrong", "Wrong"
 
 
-def check_type_from(value:str):
-    if "Специализированная форма № ФМУ-76" in  value:
+def check_type_from(value: str) -> bool:
+    if "Специализированная форма № ФМУ-76" in value:
         return True
     else:
         return False
 
-def check_structure_department(value:str):
-    if "Северо- Кавказской" in  value:
+
+def check_structure_department(value: str) -> bool:
+    if "Северо- Кавказской" in value:
         return True
     else:
         return False
 
-def check_post(value:str):
-    if "Начальник" in  value:
+
+def check_post(value: str) -> bool:
+    if "Начальник" in value:
         return True
     else:
         return False
 
-def check_name(value:str):
+
+def check_name(value: str) -> bool:
     names = value.split(' ')
     for i in names:
         if len(i) <= 1 or i[0] == i[0].lower():
             return False
     return True
-def validate_raw_fmu_76(dataframe: pd.DataFrame):
-    print(dataframe)
+
+
+def validate_raw_fmu_76(dataframe: pd.DataFrame) -> tuple[list, list]:
     unvalidated = []
     reasons = []
     col_name = "Значение"

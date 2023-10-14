@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 import streamlit as st
 from pathlib import Path
@@ -120,7 +122,6 @@ class Gui:
         else:
             raise ValueError(f"Option is not correct! Current value = {self.option}")
 
-
         self.uploaded_file = None
 
     def draw_results_m11(self, df: pd.DataFrame, df_list: list) -> None:
@@ -132,7 +133,7 @@ class Gui:
         :return:
             None
         """
-
+        df_list = [_df.reset_index(drop=True) for _df in df_list]
         unvalidated_row, reasons_row = validate_raw_data_m11(df)
         is_accept = len(unvalidated_row)
 
@@ -170,13 +171,15 @@ class Gui:
                     unsafe_allow_html=True)
 
         with self.data_container:
-            if len(reasons_row) != 0:
-                if len(reasons_row) < 2:
+            if len(reasons_row+reasons_list) != 0:
+                if len(reasons_row+reasons_list) < 2:
                     st.markdown('<h1 style="text-align:center">Причина:<h1>', unsafe_allow_html=True)
                 else:
                     st.markdown('<h1 style="text-align:center">Причины:<h1>', unsafe_allow_html=True)
+
                 for reason in reasons_row:
                     st.markdown(f'- {reason}')
+
                 for reasons in reasons_list:
                     for reason in reasons:
                         st.markdown(f'- {reason}')
@@ -193,18 +196,19 @@ class Gui:
                 height=500,
                 hide_index=True
             )
+
         with self.data_container:
             for i in range(len(df_list)):
-                dataframe = df_list[i]
-                unvalidated_t = unvalidated_list[i]
-                reason_t = reasons_list[i]
                 try:
+                    dataframe = df_list[i]
+                    unvalidated_t = unvalidated_list[i]
+                    reason_t = reasons_list[i]
                     st.dataframe(dataframe.style.map(lambda x: color_survived(x, dataframe, unvalidated_t)),
                                  hide_index=True)
 
                 except Exception as e:
-                    print(e)
-                    raise e
+                    logging.getLogger("dev").warning(e)
+                    # raise e
 
     def draw_results_fmu(self, df: pd.DataFrame, df_list: list) -> None:
         """
@@ -215,7 +219,7 @@ class Gui:
         :return:
             None
         """
-
+        df_list = [_df.reset_index(drop=True) for _df in df_list]
         unvalidated_row, reasons_row = validate_raw_fmu_76(df)
         is_accept = len(unvalidated_row)
 
@@ -226,6 +230,7 @@ class Gui:
             unvalidated_list.append(unvalidated_t)
             is_accept += len(unvalidated_t)
             reasons_list.append(reason_t)
+
         def highlight_survived(s):
             return (
                 [''] * len(s) if s["Название"] not in unvalidated_row
@@ -252,11 +257,12 @@ class Gui:
                     unsafe_allow_html=True)
 
         with self.data_container:
-            if len(reasons_row) != 0:
-                if len(reasons_row) < 2:
+            if len(reasons_row+reasons_list) != 0:
+                if len(reasons_row+reasons_list) < 2:
                     st.markdown('<h1 style="text-align:center">Причина:<h1>', unsafe_allow_html=True)
                 else:
                     st.markdown('<h1 style="text-align:center">Причины:<h1>', unsafe_allow_html=True)
+
                 for reason in reasons_row:
                     st.markdown(f'- {reason}')
                 for reasons in reasons_list:
@@ -277,16 +283,15 @@ class Gui:
             )
         with self.data_container:
             for i in range(len(df_list)):
-                dataframe = df_list[i]
-                unvalidated_t = unvalidated_list[i]
-                reason_t = reasons_list[i]
                 try:
+                    dataframe = df_list[i]
+                    unvalidated_t = unvalidated_list[i]
+                    reason_t = reasons_list[i]
                     st.dataframe(dataframe.style.map(lambda x: color_survived(x, dataframe, unvalidated_t)),
                                  hide_index=True)
 
                 except Exception as e:
-                    print(e)
-                    raise e
+                    logging.getLogger("dev").warning(e)
 
     def displayPDF(self, file):
         # Opening file from file path
