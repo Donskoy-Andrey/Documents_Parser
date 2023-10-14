@@ -191,7 +191,7 @@ def validate_dataframe_m11_2(dataframe: pd.DataFrame):
             elif not row[col].startswith("1003"):
                 unvalidated.append((index, col))
                 reasons.append(f"{col}: неправильные данные")
-
+        print(row)
         if not row["Материальные ценности (номенклатурный номер)"].replace(" ", "").replace("\n", "").isdigit():
             unvalidated.append((index, "Материальные ценности (номенклатурный номер)"))
             reasons.append(f'"Материальные ценности (номенклатурный номер)": неправильные данные (только цифры)')

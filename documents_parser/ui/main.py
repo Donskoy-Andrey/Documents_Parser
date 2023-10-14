@@ -3,7 +3,7 @@ import streamlit as st
 from pathlib import Path
 import base64
 import random
-from documents_parser.ui.validator import validate
+from documents_parser.ui.validator import validate_tables_m11, validate_raw_data_m11
 from documents_parser.parser.ocr_m11_scripts import ocr_m11
 from documents_parser.parser.table_parser import table_ocr_m
 
