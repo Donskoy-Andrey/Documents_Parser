@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Hashable
+from typing import Hashable, Tuple, Any
 from numpy import isnan
 
 ORGANIZATION_TYPES = [
@@ -38,7 +38,11 @@ def check_organization(value: str) -> bool:
     return False
 
 
-def check_float(candidate):
+def check_float(candidate: Any) -> bool:
+    """
+    :param candidate:
+    :return: True if the candidate can be float
+    """
     try:
         print(f"{candidate=} {float(candidate)=} {isnan(float(candidate))=}")
         if isnan(float(candidate)):
@@ -51,43 +55,53 @@ def check_float(candidate):
         return False
 
 
-def validate(dataframe: pd.DataFrame) -> list[Hashable]:
+def validate(dataframe: pd.DataFrame) -> Tuple[list[Hashable], list[str]]:
     """
+
     :param dataframe: column: "Значение"
-    :return:
+    :return: list of indexes with wrong col, list of reasons
     """
     unvalidated: list[Hashable] = []
+    reasons: list[str] = []
     col_name = "Значение"
     for index, row in dataframe.iterrows():
         value = row[col_name]
         if index == "Организация":
             if not check_organization(value):
                 unvalidated.append(index)
+                reasons.append("Неверное название организации")
         elif index == "Тип формы":
             if "Типовая межотраслевая форма" not in value:
                 unvalidated.append(index)
+                reasons.append("Отсутствует фраза: \"Типовая межотраслевая форма\"")
         elif index == "Требование-накладная":
             if not check_float(value):
                 unvalidated.append(index)
+                reasons.append(f"Требование-накладная: Неверный формат номера (только числа)")
         elif "Коды" in index:
             if not check_float(value):
                 unvalidated.append(index)
+                reasons.append(f"{index}: Неверный формат номера (только числа)")
 
         elif "документ" in index.lower():
 
             if not check_float(value):
                 unvalidated.append(index)
+                reasons.append(f"{index}: Неверный формат номера (только числа)")
             elif float(value) <= 0:
                 unvalidated.append(index)
+                reasons.append(f"{index}: Неверный формат номера (только числа > 0)")
         else:
             try:
                 if len(value.split(" ")) < 3:
                     unvalidated.append(index)
+                    reasons.append(f"{index}: Неверный формат")
             except AttributeError:
                 # if not str
                 unvalidated.append(index)
+                reasons.append(f"{index}: Неверный формат")
 
-    return unvalidated
+    return unvalidated, reasons
 
 
 if __name__ == '__main__':
