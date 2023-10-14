@@ -3,7 +3,7 @@ import streamlit as st
 from pathlib import Path
 import base64
 import random
-from documents_parser.ui.validator import validate_raw_fata, validate_tables
+from documents_parser.ui.validator import validate_raw_data_m11, validate_tables_m11
 from documents_parser.parser.ocr_scripts import ocr
 from documents_parser.parser.table_parser import table_ocr
 
@@ -101,10 +101,10 @@ class Gui:
 
         gif_runner.empty()  # finish gif
         self.button_container.empty()
-        self.draw_results(df, df_list)
+        self.draw_results_m11(df, df_list)
         self.uploaded_file = None
 
-    def draw_results(self, df: pd.DataFrame, df_list: list) -> None:
+    def draw_results_m11(self, df: pd.DataFrame, df_list: list) -> None:
         """
         draw results of document parser func
         :param df: df with results of from parser func
@@ -114,13 +114,13 @@ class Gui:
             None
         """
 
-        unvalidated_row, reasons_row = validate_raw_fata(df)
+        unvalidated_row, reasons_row = validate_raw_data_m11(df)
         is_accept = len(unvalidated_row)
 
         unvalidated_list = []
         reasons_list = []
         for dataframe in df_list:
-            unvalidated_t, reason_t = validate_tables(dataframe)
+            unvalidated_t, reason_t = validate_tables_m11(dataframe)
             unvalidated_list.append(unvalidated_t)
             reasons_list.append(reason_t)
 

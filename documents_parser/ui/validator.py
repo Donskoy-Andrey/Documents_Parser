@@ -55,7 +55,7 @@ def check_float(candidate: Any) -> bool:
         return False
 
 
-def validate_raw_fata(dataframe: pd.DataFrame) -> Tuple[list[Hashable], list[str]]:
+def validate_raw_data_m11(dataframe: pd.DataFrame) -> Tuple[list[Hashable], list[str]]:
     """
 
     :param dataframe: column: "Значение"
@@ -128,7 +128,7 @@ def check_date(date: str) -> bool:
         return False
 
 
-def validate_dataframe_1(dataframe: pd.DataFrame):
+def validate_dataframe_m11_1(dataframe: pd.DataFrame):
     reasons = []
     unvalidated = []
 
@@ -176,7 +176,7 @@ def validate_dataframe_1(dataframe: pd.DataFrame):
     return unvalidated, reasons
 
 
-def validate_dataframe_2(dataframe: pd.DataFrame):
+def validate_dataframe_m11_2(dataframe: pd.DataFrame):
     reasons = []
     unvalidated = []
     for index, row in dataframe.iterrows():
@@ -229,14 +229,14 @@ def validate_dataframe_2(dataframe: pd.DataFrame):
     return unvalidated, reasons
 
 
-def validate_tables(dataframe: pd.DataFrame):
+def validate_tables_m11(dataframe: pd.DataFrame):
     # for dataframe in dataframes:
     df_type = identify_df(dataframe)
     # print(f"{df_type=}")
     if df_type == 1:
-        return validate_dataframe_1(dataframe)
+        return validate_dataframe_m11_1(dataframe)
     elif df_type == 2:
-        return validate_dataframe_2(dataframe)
+        return validate_dataframe_m11_2(dataframe)
     else:
         return "Wrong", "Wrong"
 
