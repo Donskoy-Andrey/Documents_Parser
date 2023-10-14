@@ -5,7 +5,8 @@ import base64
 import random
 from documents_parser.ui.validator import validate_tables_m11, validate_raw_data_m11
 from documents_parser.parser.ocr_m11_scripts import ocr_m11
-from documents_parser.parser.table_parser import table_ocr_m
+from documents_parser.parser.ocr_fmu76_scripts import ocr_fmu76
+from documents_parser.parser.table_parser import table_ocr_m11, table_ocr_fmu76
 
 SRC_PATH = Path(__file__).parent / "src"
 DOWNLOAD_FILENAME = Path("data/file.pdf")
@@ -103,8 +104,14 @@ class Gui:
             # loading gif :)
             gif_runner = st.image(gif_path)
         print(f"{self.option=}")
-        df = ocr_m11(pdf_path=str(DOWNLOAD_FILENAME))
-        df_list = table_ocr_m(path=str(DOWNLOAD_FILENAME))
+        if self.option == "М-11":
+            df = ocr_m11(pdf_path=str(DOWNLOAD_FILENAME))
+            df_list = table_ocr_m11(path=str(DOWNLOAD_FILENAME))
+        elif self.option == "ФМУ-76":
+            df = ocr_fmu76(pdf_path=str(DOWNLOAD_FILENAME))
+            df_list = table_ocr_fmu76(path=str(DOWNLOAD_FILENAME))
+        else:
+            raise ValueError(f"Option is not correct! Current value = {self.option}")
 
         gif_runner.empty()  # finish gif
         self.button_container.empty()
@@ -133,9 +140,10 @@ class Gui:
             reasons_list.append(reason_t)
 
         def highlight_survived(s):
-            return [''] * len(s) if s["Название"] not in unvalidated_row else [
-                                                                                  'background-color: tomato;text-color: black;'] * len(
-                s)
+            return (
+                [''] * len(s) if s["Название"] not in unvalidated_row
+                else ['background-color: tomato;text-color: black;'] * len(s)
+            )
 
         def color_survived(val, df, unvalidated):
             color = 'background-color: tomato;text-color: black;'
@@ -144,8 +152,6 @@ class Gui:
                 if df.loc[index, col] == val:
                     return color
             return ''
-
-
 
         if df is not None:
             if is_accept == 0:

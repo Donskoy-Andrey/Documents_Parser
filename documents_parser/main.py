@@ -1,7 +1,7 @@
 from sys import argv
 from .parser.ocr_m11_scripts import ocr_m11
 from .parser.ocr_fmu76_scripts import ocr_fmu76
-from .parser.table_parser import table_ocr_m
+from .parser.table_parser import table_ocr_m11
 import logging
 
 
