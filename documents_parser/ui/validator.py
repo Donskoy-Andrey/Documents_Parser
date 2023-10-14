@@ -114,7 +114,10 @@ def identify_df(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
 
 
 def check_date(date: str) -> bool:
-    day, month, year = date.split(".")
+    try:
+        day, month, year = date.split(".")
+    except ValueError:
+        return False
     try:
         if len(day) > 2 or int(day) < 1 or int(day) > 31:
             return False
@@ -234,10 +237,86 @@ def validate_tables_m11(dataframe: pd.DataFrame):
     else:
         return "Wrong", "Wrong"
 
+
+def check_type_from(value:str):
+    if "Специализированная форма № ФМУ-76" in  value:
+        return True
+    else:
+        return False
+
+def check_structure_department(value:str):
+    if "Северо- Кавказской" in  value:
+        return True
+    else:
+        return False
+
+def check_post(value:str):
+    if "Начальник" in  value:
+        return True
+    else:
+        return False
+
+def check_name(value:str):
+    names = value.split(' ')
+    for i in names:
+        if len(i) <= 1 or i[0] == i[0].lower():
+            return False
+    return True
 def validate_raw_fmu_76(dataframe: pd.DataFrame):
+    print(dataframe)
     unvalidated = []
     reasons = []
+    col_name = "Значение"
+    for index, row in dataframe.iterrows():
+        value = row[col_name]
+        if index == "Тип формы":
+            if not check_type_from(value):
+                unvalidated.append(index)
+                reasons.append("Неверное тип формы")
+        elif index == "Номер акта":
+            if not value.isdigit():
+                unvalidated.append(index)
+                reasons.append("Номер акта не является числом")
+                continue
+            try:
+                int(value)
+            except ValueError:
+                unvalidated.append(index)
+                reasons.append("Номер акта не является  натуральным числом")
+        elif index == "Дата акта":
+            if not check_date(value):
+                unvalidated.append(index)
+                reasons.append("Неверная дата акта")
+        elif index == "Организация":
+            if not check_organization(value):
+                unvalidated.append(index)
+                reasons.append("Неверное название организации")
+        elif index == "Структурное подразделение":
+            if not check_structure_department(value):
+                unvalidated.append(index)
+                reasons.append("Структурное подразделение не является Северо- Кавказским")
+        elif index == "Утверждено (должность)":
+            if not check_post(value):
+                unvalidated.append(index)
+                reasons.append("Утверждено не начальником")
+        elif index == "Утверждено (ФИО)":
+            if not check_name(value):
+                unvalidated.append(index)
+                reasons.append("Некорректно заполнено ФИО")
+        elif index == "Утверждено (дата)":
+            if not check_date(value):
+                unvalidated.append(index)
+                reasons.append("Неверная дата утверждения")
+        elif "Коды" in index:
+            if not check_float(value):
+                unvalidated.append(index)
+                reasons.append(f"{index}: Неверный формат номера (только числа)")
+
     return unvalidated, reasons
+
+
+
+
 
 def validate_tables_fmu_76(dataframe: pd.DataFrame):
     unvalidated = []
@@ -247,4 +326,4 @@ def validate_tables_fmu_76(dataframe: pd.DataFrame):
 
 if __name__ == '__main__':
     df = pd.read_csv('src/report.csv', index_col=0)
-    print(validate(df))
+    # print(validate(df))

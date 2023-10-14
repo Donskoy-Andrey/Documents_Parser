@@ -222,7 +222,7 @@ class Gui:
         unvalidated_list = []
         reasons_list = []
         for dataframe in df_list:
-            unvalidated_t, reason_t = validate_raw_fmu_76(dataframe)
+            unvalidated_t, reason_t = validate_tables_fmu_76(dataframe)
             unvalidated_list.append(unvalidated_t)
             is_accept += len(unvalidated_t)
             reasons_list.append(reason_t)
