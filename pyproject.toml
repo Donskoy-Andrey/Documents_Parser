@@ -23,7 +23,6 @@ pdf2image = "^1.16.3"
 tqdm = "^4.66.1"
 pypdf2 = "2.12.1"
 camelot-py = "^0.11.0"
-tqdm = "^4.66.1"
 opencv-python = "^4.8.1.78"
 openpyxl = "^3.1.2"
 
