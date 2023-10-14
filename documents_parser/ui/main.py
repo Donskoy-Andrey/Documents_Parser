@@ -5,7 +5,7 @@ import base64
 import random
 from documents_parser.ui.validator import validate
 from documents_parser.parser.ocr_m11_scripts import ocr_m11
-from documents_parser.parser.table_parser import table_ocr
+from documents_parser.parser.table_parser import table_ocr_m
 
 SRC_PATH = Path(__file__).parent / "src"
 DOWNLOAD_FILENAME = Path("data/file.pdf")
@@ -97,7 +97,7 @@ class Gui:
             gif_runner = st.image(gif_path)
 
         df = ocr_m11(pdf_path=str(DOWNLOAD_FILENAME))
-        df_list = table_ocr(path=str(DOWNLOAD_FILENAME))
+        df_list = table_ocr_m(path=str(DOWNLOAD_FILENAME))
 
         gif_runner.empty()  # finish gif
         self.button_container.empty()
