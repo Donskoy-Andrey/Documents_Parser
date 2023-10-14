@@ -1,64 +1,143 @@
+import json
+import random
 import time
+import pandas as pd
 
 import streamlit as st
 from pathlib import Path
 from PIL import Image
-
+import base64
+import random
 SRC_PATH = Path(__file__).parent / "src"
 DOWNLOAD_FILENAME = Path("documents_parser/incoming_files/file.pdf")
 
 def test():
-    time.sleep(5)
+    df = pd.read_csv(SRC_PATH / "report.csv")
+    accepted = random.randint(0, 1)
+    return df, accepted
 
 class Gui:
     def __init__(self):
+        """
+        initialize the class Gui
+        """
         st.set_page_config(layout='wide')
+        with open(SRC_PATH / "historical_data.json") as f:
+            # line = f.readline()
+            self.historical_data = json.load(f)
         self.uploaded_file = None
         # self.button_status = ButtonStatus(disabled=True)
         self.button_disabled = True
         self.check_button: st.button or None = None
-        self.draw_gui()
+        self.head_container = st.container()
 
-    def draw_gui(self):
-        # title, logo = st.columns(2)
-        title, logo = st.columns([5, 1])
-        title.title("File Uploader by \"AAA_Team\"")
-        logo.image(str(SRC_PATH / "logo.png"), width=150, output_format="PNG")
+        self.upload_container = st.container()
+        self.result_container = st.container()
+        self.result_container.write("")
+        self.button_container = st.container()
+        self.data_container = st.container()
+        self.data_container.write("")
+
+        self.__draw_gui()
+
+    def __draw_gui(self) -> None:
+        """
+        draw base widgets of UI
+        :return: None
+        """
+        with self.head_container:
+            title, logo = st.columns([5, 1])
+            title.title("File Uploader by \"AAA_Team\"")
+            logo.image(str(SRC_PATH / "logo.png"), width=150, output_format="PNG")
+
         self.draw_choose_file()
-        # st.image(str(SRC_PATH / "dance.gif"), output_format='GIF')
-        self.check_button = st.button(
-            'Check',
-            help="Check document",
-            on_click=lambda: self.run_file_processing(),
-            disabled=self.button_disabled
-        )
 
-    def draw_choose_file(self):
-        self.uploaded_file = st.file_uploader(
-            "Choose a file",
-            type=["pdf"],
-            accept_multiple_files=False
-        )
+        with self.button_container:
+            self.check_button = st.button(
+                'Проверить',
+                help="Проверить документ",
+                on_click=lambda: self.run_file_processing(),
+                disabled=self.button_disabled
+            )
+
+    def draw_choose_file(self) -> None:
+        """
+        Draw choose file widget
+        :return: None
+        """
+        with self.upload_container:
+            self.uploaded_file = st.file_uploader(
+                "Выберите файл",
+                type=["pdf"],
+                accept_multiple_files=False
+            )
+
         if self.uploaded_file is not None:
             filename = self.uploaded_file.name
-            # uploaded_file.write('')
-            st.write("Selected file:", filename)
+            with self.button_container:
+                st.write("Выбранный файл:", filename)
             self.button_disabled = False
 
         else:
-            st.write("No file selected")
+            st.write("Не выбран файл")
 
-    def run_file_processing(self):
+    def run_file_processing(self) -> None:
+        """
+        Activate functions, reaction on click of check_button
+        :return: None
+        """
         self.button_disabled = True
-        with open(DOWNLOAD_FILENAME, 'wb+') as f:
-            f.write(self.uploaded_file.read())
-        print(self.uploaded_file.name)
-        gif_path = "https://donskow.com/g"
 
-        gif_runner = st.image(gif_path)
-        test()
-        gif_runner.empty()
+        with open(DOWNLOAD_FILENAME, 'wb+') as f:
+            # save file to local machine
+            f.write(self.uploaded_file.read())
+        gif_path = "https://donskow.com/g"
+        with self.button_container:
+            # loading gif :)
+            gif_runner = st.image(gif_path)
+        df, is_accept = test() # main document parser func
+        # print(f"seper {self.result}")
+        gif_runner.empty()  # finish gif
+        self.button_container.empty()
+        self.draw_results(df, is_accept)
         self.uploaded_file = None
+
+    def draw_results(self, df: pd.DataFrame, is_accept: int) -> None:
+        """
+        draw results of document parser func
+        :param df: df with results of from parser func
+        :param is_accept: returned status of parser func
+        :return:
+        """
+        if df is not None:
+            if is_accept == 1:
+                self.result_container.markdown('<h2 style="color:white;background-color:green;text-align:center">Принято</h2>', unsafe_allow_html=True)
+                self.data_container.markdown('_____', )
+            else:
+                self.result_container.markdown('<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>', unsafe_allow_html=True)
+                self.data_container.markdown('_____',)
+
+        self.data_container.markdown('<h1 style="text-align:center">Описание<h1>', unsafe_allow_html=True)
+        if isinstance(df, pd.DataFrame):
+            self.data_container.dataframe(df)
+        elif isinstance(df, list):
+            for dataframe in df:
+                try:
+                    self.data_container.dataframe(dataframe)
+                except Exception as e:
+                    print(e)
+                    raise e
+
+    def displayPDF(self ,file):
+        # Opening file from file path
+        with open(file, "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+
+        # Embedding PDF in HTML
+        pdf_display = F'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
+        with self.button_container:
+        # Displaying File
+            st.markdown(pdf_display, unsafe_allow_html=True)
 
 
 def main():
