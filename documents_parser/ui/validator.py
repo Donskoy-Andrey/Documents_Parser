@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import Hashable
+from numpy import isnan
 
 ORGANIZATION_TYPES = [
     "ОАО",
@@ -22,7 +23,31 @@ ORGANIZATION_TYPES = [
     "ФСТЭК"
 ]
 
-def check_organization():
+def check_organization(value: str) -> bool:
+    """
+
+    :param value:
+    :return: return False if wrong organization name
+    """
+
+
+    if_cor_type = False
+    for org_type in ORGANIZATION_TYPES:
+        if org_type in value:
+            return True
+    return False
+
+
+def check_float(candidate):
+    try:
+        print(f"{candidate=} {float(candidate)=} {isnan(float(candidate))=}")
+        if isnan(float(candidate)):
+            return False
+        float(candidate)
+        return True
+    except ValueError:
+        return False
+
 
 def validate(dataframe: pd.DataFrame) -> list[Hashable]:
     """
@@ -31,15 +56,34 @@ def validate(dataframe: pd.DataFrame) -> list[Hashable]:
     """
     unvalidated: list[Hashable] = []
     col_name = "Значение"
-    # print(dataframe)
     for index, row in dataframe.iterrows():
         value = row[col_name]
         if index == "Организация":
-            if "\"" not in value:
+            if not check_organization(value):
                 unvalidated.append(index)
-            elif
+        elif index == "Тип формы":
+            if "Типовая межотраслевая форма" not in value:
+                unvalidated.append(index)
+        elif index == "Требование-накладная":
+            if not check_float(value):
+                unvalidated.append(index)
+        elif "Коды" in index:
+            if not check_float(value):
+                unvalidated.append(index)
 
+        elif "Документа" in index:
 
+            if not check_float(value):
+                unvalidated.append(index)
+            elif float(value) <= 0:
+                unvalidated.append(index)
+        else:
+            try:
+                if len(value.split(" ")) < 3:
+                    unvalidated.append(index)
+            except AttributeError:
+                # if not str
+                unvalidated.append(index)
 
     return unvalidated
 
