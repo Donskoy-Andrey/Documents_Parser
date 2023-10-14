@@ -105,7 +105,7 @@ def validate_raw_fata(dataframe: pd.DataFrame) -> Tuple[list[Hashable], list[str
 
 
 def identify_df(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
-    print(f"{dataframe.columns=}")
+    # print(f"{dataframe.columns=}")
     if dataframe.columns[0] in ["Дата составления", "Дата\nсоставления"]:
         return 1
     elif dataframe.columns[0] in ["Корреспондирующий счет", "Корреспондирующий\nсчет"]:
@@ -116,11 +116,11 @@ def identify_df(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
 def check_date(date: str) -> bool:
     day, month, year = date.split(".")
     try:
-        if len(day) <= 2 or int(day) < 1 or int(day) > 31:
+        if len(day) > 2 or int(day) < 1 or int(day) > 31:
             return False
-        if len(month) <= 2 or int(month) < 1 or int(month) > 12:
+        if len(month) > 2 or int(month) < 1 or int(month) > 12:
             return False
-        if len(year) == 4 or int(year) < datetime.date.today().year:
+        if len(year) != 4 or int(year) > datetime.date.today().year:
             return False
         return True
     except AttributeError:
@@ -133,7 +133,7 @@ def validate_dataframe_1(dataframe: pd.DataFrame):
     unvalidated = []
 
     for index, row in dataframe.iterrows():
-        print(f"{index=} {row=}")
+        # print(f"{index=} {row=}")
         # validate date
         if not check_date(row["Дата составления"]):
             unvalidated.append((index, "Дата составления"))
@@ -166,9 +166,12 @@ def validate_dataframe_1(dataframe: pd.DataFrame):
 
         corresponding_account = [col for col in dataframe.columns if "Корреспондирующий счет" in col]
         for col in corresponding_account:
-            if not row[col].isdigit() or row[col] != "-":
+            if not row[col].replace(" ", "").isdigit() and row[col] != "-":
                 unvalidated.append((index, col))
                 reasons.append(f"{col}: неправильные данные")
+            elif not row[col].startswith("7909"):
+                unvalidated.append((index, col))
+                reasons.append(f"{col}: неправильные данные (начинается с 7909)")
 
     return unvalidated, reasons
 
@@ -177,13 +180,20 @@ def validate_dataframe_2(dataframe: pd.DataFrame):
     reasons = []
     unvalidated = []
     for index, row in dataframe.iterrows():
+        if index == 2:
+            continue
         corresponding_account = [col for col in dataframe.columns if "Корреспондирующий счет" in col]
         for col in corresponding_account:
-            if not row[col].isdigit() or row[col] != "-":
+            print("aaaa ", row[col])
+            if (not row[col].replace(" ", "").replace("\n", "").isdigit()
+                    and row[col] != "-"):
+                unvalidated.append((index, col))
+                reasons.append(f"{col}: неправильные данные (начинается с 1003)")
+            elif not row[col].startswith("1003"):
                 unvalidated.append((index, col))
                 reasons.append(f"{col}: неправильные данные")
 
-        if not row["Материальные ценности (номенклатурный номер)"].isdigit():
+        if not row["Материальные ценности (номенклатурный номер)"].replace(" ", "").replace("\n", "").isdigit():
             unvalidated.append((index, "Материальные ценности (номенклатурный номер)"))
             reasons.append(f'"Материальные ценности (номенклатурный номер)": неправильные данные (только цифры)')
         if not row["Единица измерения (код)"].isdigit():
@@ -191,24 +201,29 @@ def validate_dataframe_2(dataframe: pd.DataFrame):
             reasons.append(f'"Единица измерения (код)": неправильные данные (только цифры)')
         totals = [col for col in dataframe.columns if "Количество" in col]
         for col in totals:
-            if not check_float(row[col]):
+            if not check_float(row[col].replace(" ", "").replace("\n", "")):
                 unvalidated.append((index, col))
                 reasons.append(f"{col}: неправильные данные")
-        prices = [col for col in dataframe.columns if "Количество" in col]
+        prices = [col for col in dataframe.columns if "руб." in col]
         for col in prices:
             try:
-                if len(row[col].split(",")) != 2:
+                if len(row[col].replace("\n", "").replace(" ", "").split(",")) != 2:
+                    print("aaaaaa ", row[col])
                     unvalidated.append((index, col))
                     reasons.append(f"{col}: Неправильный денежный формат (руб,коп)")
                 else:
                     rub, kop = row[col].split(",")
+                    rub = rub.replace(" ", "").replace("\n", "")
+                    kop = kop.replace(" ", "").replace("\n", "")
+                    print(f'{rub=} {rub.isdigit()=} {kop=} {kop.isdigit()=} {not rub.isdigit() or not kop.isdigit()}')
                     if not rub.isdigit() or not kop.isdigit():
+                        print(f"{rub=} {rub.isdigit()=}")
                         unvalidated.append((index, col))
                         reasons.append(f"{col}: Неправильный денежный формат (руб,коп)")
-                    elif kop > 100:
-                        unvalidated.append((index, col))
-                        reasons.append(f"{col}: Неправильное количество копеек (руб,коп)")
+
             except AttributeError:
+                print('here ', row[col])
+
                 unvalidated.append((index, col))
                 reasons.append(f"{col}: Неправильный денежный формат (руб,коп)")
     return unvalidated, reasons
@@ -217,7 +232,7 @@ def validate_dataframe_2(dataframe: pd.DataFrame):
 def validate_tables(dataframe: pd.DataFrame):
     # for dataframe in dataframes:
     df_type = identify_df(dataframe)
-    print(f"{df_type=}")
+    # print(f"{df_type=}")
     if df_type == 1:
         return validate_dataframe_1(dataframe)
     elif df_type == 2:
