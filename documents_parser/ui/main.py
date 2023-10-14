@@ -22,6 +22,7 @@ class Gui:
         initialize the class Gui
         """
         st.set_page_config(layout='wide')
+
         with open(SRC_PATH / "historical_data.json") as f:
             # line = f.readline()
             self.historical_data = json.load(f)
@@ -46,8 +47,9 @@ class Gui:
         :return: None
         """
         with self.head_container:
-            title, logo = st.columns([5, 1])
+            title, we, logo = st.columns([5, 1, 1])
             title.title("File Uploader by \"AAA_Team\"")
+            we.image(str(SRC_PATH / "img.png"), width=100, output_format="PNG")
             logo.image(str(SRC_PATH / "logo.png"), width=150, output_format="PNG")
 
         self.draw_choose_file()
@@ -109,6 +111,17 @@ class Gui:
         :param is_accept: returned status of parser func
         :return:
         """
+
+        def check_float(candidate):
+            try:
+                float(candidate)
+                return True
+            except ValueError:
+                return False
+
+        def highlight_survived(s):
+            return ['background-color: green'] * len(s) if check_float(s['test5.pdf']) else ['background-color: red'] * len(s)
+
         if df is not None:
             if is_accept == 1:
                 self.result_container.markdown('<h2 style="color:white;background-color:green;text-align:center">Принято</h2>', unsafe_allow_html=True)
@@ -119,11 +132,15 @@ class Gui:
 
         self.data_container.markdown('<h1 style="text-align:center">Описание<h1>', unsafe_allow_html=True)
         if isinstance(df, pd.DataFrame):
-            self.data_container.dataframe(df)
+            self.data_container.dataframe(
+                # df.style.set_properties(**{"background-color": "black", "color": "lawngreen"}),
+                df.style.apply(highlight_survived, axis=1),
+                hide_index=True
+            )
         elif isinstance(df, list):
             for dataframe in df:
                 try:
-                    self.data_container.dataframe(dataframe)
+                    self.data_container.dataframe(dataframe, hide_index=True)
                 except Exception as e:
                     print(e)
                     raise e
