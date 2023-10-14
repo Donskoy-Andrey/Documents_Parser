@@ -4,6 +4,7 @@ from pathlib import Path
 import base64
 import random
 from documents_parser.ui.validator import validate_tables_m11, validate_raw_data_m11
+from documents_parser.ui.validator import validate_tables_fmu_76, validate_raw_fmu_76
 from documents_parser.parser.ocr_m11_scripts import ocr_m11
 from documents_parser.parser.ocr_fmu76_scripts import ocr_fmu76
 from documents_parser.parser.table_parser import table_ocr_m11, table_ocr_fmu76
@@ -107,15 +108,19 @@ class Gui:
         if self.option == "М-11":
             df = ocr_m11(pdf_path=str(DOWNLOAD_FILENAME))
             df_list = table_ocr_m11(path=str(DOWNLOAD_FILENAME))
+            gif_runner.empty()  # finish gif
+            self.button_container.empty()
+            self.draw_results_m11(df, df_list)
         elif self.option == "ФМУ-76":
             df = ocr_fmu76(pdf_path=str(DOWNLOAD_FILENAME))
             df_list = table_ocr_fmu76(path=str(DOWNLOAD_FILENAME))
+            gif_runner.empty()  # finish gif
+            self.button_container.empty()
+            self.draw_results_fmu(df, df_list)
         else:
             raise ValueError(f"Option is not correct! Current value = {self.option}")
 
-        gif_runner.empty()  # finish gif
-        self.button_container.empty()
-        self.draw_results_m11(df, df_list)
+
         self.uploaded_file = None
 
     def draw_results_m11(self, df: pd.DataFrame, df_list: list) -> None:
@@ -139,6 +144,88 @@ class Gui:
             is_accept += len(unvalidated_t)
             reasons_list.append(reason_t)
 
+        def highlight_survived(s):
+            return (
+                [''] * len(s) if s["Название"] not in unvalidated_row
+                else ['background-color: tomato;text-color: black;'] * len(s)
+            )
+
+        def color_survived(val, df, unvalidated):
+            color = 'background-color: tomato;text-color: black;'
+            for coord in unvalidated:
+                index, col = coord[0], coord[1]
+                if df.loc[index, col] == val:
+                    return color
+            return ''
+
+        if df is not None:
+            if is_accept == 0:
+                self.data_container.markdown(
+                    '<h2 style="color:white;background-color:green;text-align:center">Принято</h2>',
+                    unsafe_allow_html=True)
+                # self.data_container.markdown('_____', )
+            else:
+                self.data_container.markdown(
+                    '<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>',
+                    unsafe_allow_html=True)
+
+        with self.data_container:
+            if len(reasons_row) != 0:
+                if len(reasons_row) < 2:
+                    st.markdown('<h1 style="text-align:center">Причина:<h1>', unsafe_allow_html=True)
+                else:
+                    st.markdown('<h1 style="text-align:center">Причины:<h1>', unsafe_allow_html=True)
+                for reason in reasons_row:
+                    st.markdown(f'- {reason}')
+                for reasons in reasons_list:
+                    for reason in reasons:
+                        st.markdown(f'- {reason}')
+
+        self.data_container.markdown('_____', )
+        df = df.reset_index().rename({"index": "Название"}, axis=1)
+
+        self.data_container.markdown('<h1 style="text-align:center">Отчет<h1>', unsafe_allow_html=True)
+        if isinstance(df, pd.DataFrame):
+            self.data_container.dataframe(
+                # df.style.set_properties(**{"background-color": "black", "color": "lawngreen"}),
+                df.style.apply(highlight_survived, axis=1),
+                use_container_width=True,
+                height=500,
+                hide_index=True
+            )
+        with self.data_container:
+            for i in range(len(df_list)):
+                dataframe = df_list[i]
+                unvalidated_t = unvalidated_list[i]
+                reason_t = reasons_list[i]
+                try:
+                    st.dataframe(dataframe.style.map(lambda x: color_survived(x, dataframe, unvalidated_t)),
+                                 hide_index=True)
+
+                except Exception as e:
+                    print(e)
+                    raise e
+
+    def draw_results_fmu(self, df: pd.DataFrame, df_list: list) -> None:
+        """
+        draw results of document parser func
+        :param df: df with results of from parser func
+        :param is_accept: returned status of parser func
+        :param df_list: returned list of dataframes with table data
+        :return:
+            None
+        """
+
+        unvalidated_row, reasons_row = validate_raw_fmu_76(df)
+        is_accept = len(unvalidated_row)
+
+        unvalidated_list = []
+        reasons_list = []
+        for dataframe in df_list:
+            unvalidated_t, reason_t = validate_raw_fmu_76(dataframe)
+            unvalidated_list.append(unvalidated_t)
+            is_accept += len(unvalidated_t)
+            reasons_list.append(reason_t)
         def highlight_survived(s):
             return (
                 [''] * len(s) if s["Название"] not in unvalidated_row
