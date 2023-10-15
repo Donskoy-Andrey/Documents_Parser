@@ -1,18 +1,31 @@
 import logging
 import matplotlib.pyplot as plt
 import pandas as pd
-import pytesseract
 from pdf2image import convert_from_path
 import cv2
 import numpy as np
+from documents_parser.utils.extraction import extract_text
+from PIL import Image
 
 
 logger = logging.getLogger("dev")
 
 
 def line_detector(
-    page, threshold: int = 200, minLineLength: int = 300
+    page: Image, threshold: int = 200, min_line_length: int = 300,
+    save_line_image: bool = False
 ) -> list[list]:
+    """
+    Find horizontal lines on the pruned image.
+
+    :param page: image
+    :param threshold: param in HoughLinesP
+    :param min_line_length: param in HoughLinesP
+    :param save_line_image: save figure with lines or not
+    :return:
+        list of lines coordinates
+    """
+
     logger.info("Detect lines")
     page = cv2.cvtColor(np.array(page), cv2.COLOR_RGB2BGR)
     gray = cv2.cvtColor(page, cv2.COLOR_BGR2GRAY)
@@ -20,7 +33,7 @@ def line_detector(
     edges = cv2.Canny(blur, 50, 50)
     lines = cv2.HoughLinesP(
         edges, 1, np.pi / 180,
-        threshold, minLineLength=minLineLength, maxLineGap=0
+        threshold, minLineLength=min_line_length, maxLineGap=0
     )
 
     clear_lines = []
@@ -59,27 +72,36 @@ def line_detector(
             (255, 0, 0), 2
         )
 
-    plt.figure(figsize=(15, 20))
-    plt.imshow(page)
-    plt.savefig("data/img.png")
+    if save_line_image:
+        plt.figure(figsize=(15, 20))
+        plt.imshow(page)
+        plt.savefig("data/img.png")
 
     return clear_lines
 
 
-def extract_text(img) -> str:
-    text = pytesseract.image_to_string(img, lang='rus')
-    text = text.strip().replace("\n", " ").strip()
-    return text
-
-
 def parse_hat(img: np.ndarray) -> str | None:
+    """
+    Extract text from hat of the file
+
+    :param img: image
+    :return:
+        Extracted text
+    """
     hat = extract_text(img[0:70, 1600:])
     return hat
 
 
-def parse_codes(img, down) -> dict:
+def parse_codes(img: np.ndarray, down: int) -> dict:
+    """
+    Extract text from code block
+
+    :param img: image
+    :param down: below line level
+    :return:
+        dict with parsed code values
+    """
     codes = extract_text(img[70: down + 10, 1980:-180])
-    print(f"kjfealkjfadsbjdsfa    {codes=}")
     codes = codes.split()
     try:
         codes_dict = {
@@ -96,10 +118,18 @@ def parse_codes(img, down) -> dict:
     return codes_dict
 
 
-def parse_committee(img, lines: list) -> (str, str, str, str, str):
+def parse_committee(
+        img: np.ndarray, lines: list
+) -> (str, str, str, str, str):
+    """
+    Extract committee information from the image
+
+    :param img: image
+    :param lines: list of all lines
+    :return:
+        tuple with 4 main strings
+    """
     x1, y, x2, _ = lines[2]
-    # plt.imshow(img[y - 60:y, x1:x1+300])
-    # plt.show()
     main_person_profession = extract_text(img[y - 50:y, x1:x1+285])
     main_person_name = extract_text(img[y - 50:y, x1 + 285:x2])
     x1, y, x2, _ = lines[3]
@@ -111,7 +141,15 @@ def parse_committee(img, lines: list) -> (str, str, str, str, str):
     return main_person_profession, main_person_name, output, inn, committee
 
 
-def parse_permission(img, up: int) -> (str, str, str):
+def parse_permission(img: np.ndarray, up: int) -> (str, str, str):
+    """
+    Extract permission data from the image
+
+    :param img: image
+    :param up: above line level
+    :return:
+        tuple with 3 main strings
+    """
     x1 = 1500
     x2 = -200
     leader = extract_text(img[up+100:up+150, x1+200:x2-150])
@@ -120,7 +158,15 @@ def parse_permission(img, up: int) -> (str, str, str):
     return leader, name, date
 
 
-def parse_act(img, up: int) -> (int, str):
+def parse_act(img: np.ndarray, up: int) -> (int, str):
+    """
+    Extract act information
+
+    :param img: image
+    :param up: above line level
+    :return:
+        number of act, act date
+    """
     x1 = 1040
     x2 = 1300
     text = extract_text(img[up + 140:up + 180, x1:x2])
@@ -130,6 +176,14 @@ def parse_act(img, up: int) -> (int, str):
 
 
 def parse_organisation(lines: list, img: np.ndarray) -> str:
+    """
+    Extract organisation information
+
+    :param lines: list of all lines
+    :param img: image
+    :return:
+        Extracted text
+    """
     x1, y1, x2, y2 = lines[0]
     y1 -= 40
 
@@ -138,6 +192,14 @@ def parse_organisation(lines: list, img: np.ndarray) -> str:
 
 
 def parse_department(lines: list, img: np.ndarray) -> (str, int):
+    """
+    Extract department data from the image
+
+    :param lines: list of all lines
+    :param img: image
+    :return:
+        department, y level
+    """
     x1 = lines[0][0]
     y1 = lines[0][1] + 20
     x2 = lines[1][2]
@@ -147,27 +209,32 @@ def parse_department(lines: list, img: np.ndarray) -> (str, int):
     return structure_department, y2
 
 
-def ocr_fmu76(pdf_path: str | None = None) -> pd.DataFrame:
+def ocr_fmu76(
+    pdf_path: str | None = None, do_committee: bool = False
+) -> pd.DataFrame:
     """
     Convert pdf file of `ФМУ-76` form to string variable.
 
     :param pdf_path: str, path to pdf file.
+    :param do_committee: bool, parse committee or not
     :return:
         All text from file in pdf-pages.
     """
 
+    # Read file
     if pdf_path is None:
         raise ValueError("OCR should work with correct file path.")
-    filename = pdf_path.split("/")[-1]
 
     logger.info("Convert PDF file to image.")
     pages = convert_from_path(pdf_path)
     logger.info("Converting PDF file to image finished.")
 
+    # Process first page
     page = pages[0]
     img = np.array(page)
     lines = line_detector(page)
 
+    # Parsing
     logger.info("1. Parsing hat")
     hat = parse_hat(img)
     logger.info("2. Parsing organisation")
@@ -181,22 +248,15 @@ def ocr_fmu76(pdf_path: str | None = None) -> pd.DataFrame:
     logger.info("6. Parsing codes")
     codes_dict = parse_codes(img, codes_y_down)
 
-    # logger.info("7. Parsing committee")
-    # long_lines = []
-    # for line in lines:
-    #     if abs(line[0] - line[2]) > 1300:
-    #         long_lines.append(line)
-    # main_person_profession, main_person_name, output, inn, committee = parse_committee(img, long_lines)
-    # print(long_lines)
+    if do_committee:
+        logger.info("7. Parsing committee")
+        long_lines = []
+        for line in lines:
+            if abs(line[0] - line[2]) > 1300:
+                long_lines.append(line)
+        main_person_profession, main_person_name, output, inn, committee = parse_committee(img, long_lines)
 
-    # text = ""
-    # for page in pages:
-    #     img = np.array(page)
-    #     text += pytesseract.image_to_string(img, lang='rus')
-    #
-    # with open("data/text.txt", "w") as file:
-    #     file.write(text)
-
+    # Create report
     report = pd.DataFrame({
         "Тип формы": [hat],
         "Номер акта": [number],
