@@ -42,7 +42,7 @@ def check_organization(value: str) -> bool:
 def check_float(candidate: Any) -> bool:
     """
     :param candidate:
-    :return: True if the candidate can be float
+    :return: True if the candidate can be floated
     """
     try:
         if isnan(float(candidate)):
@@ -55,7 +55,7 @@ def check_float(candidate: Any) -> bool:
         return False
 
 
-def validate_raw_data_m11(dataframe: pd.DataFrame) -> Tuple[list[Hashable], list[str]]:
+def validate_raw_data_m11(dataframe: pd.DataFrame) -> Tuple[list, list[str]]:
     """
 
     :param dataframe: column: "Значение"
@@ -105,7 +105,11 @@ def validate_raw_data_m11(dataframe: pd.DataFrame) -> Tuple[list[Hashable], list
 
 
 def identify_df(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
-    # print(f"{dataframe.columns=}")
+    """
+    identify a type of dataframe on document M-11
+    :param dataframe: parsed from document M-11
+    :return:
+    """
     if dataframe.columns[0] in ["Дата составления", "Дата\nсоставления"]:
         return 1
     elif dataframe.columns[0] in ["Корреспондирующий счет", "Корреспондирующий\nсчет"]:
@@ -114,6 +118,11 @@ def identify_df(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
 
 
 def check_date(date: str) -> bool:
+    """
+    check if date in format dd.mm.yyyy
+    :param date: string
+    :return: true if date is valid, false otherwise
+    """
     try:
         day, month, year = date.split(".")
     except ValueError:
@@ -131,7 +140,15 @@ def check_date(date: str) -> bool:
         return False
 
 
-def validate_dataframe_m11_1(dataframe: pd.DataFrame):
+def validate_dataframe_m11_1(dataframe: pd.DataFrame) -> Tuple[list, list]:
+    """
+    validate table from document M-11 (type 1)
+    use function identify_df to get type
+    :param dataframe: parsed from a document
+    :return:
+     two lists: a first list is "coordinates" unvalidated cell (index, column),
+     a second list is reasons why unvalidated
+    """
     reasons = []
     unvalidated = []
 
@@ -180,6 +197,14 @@ def validate_dataframe_m11_1(dataframe: pd.DataFrame):
 
 
 def validate_dataframe_m11_2(dataframe: pd.DataFrame):
+    """
+    validate table from document M-11 (type 2)
+    (use function ```identify_df``` to get type)
+    :param dataframe: parsed from a document
+    :return:
+     two lists: a first list is "coordinates" unvalidated cell (index, column),
+     a second list is reasons why unvalidated
+    """
     reasons = []
     unvalidated = []
     for index, row in dataframe.iterrows():
@@ -226,10 +251,17 @@ def validate_dataframe_m11_2(dataframe: pd.DataFrame):
     return unvalidated, reasons
 
 
-def validate_tables_m11(dataframe: pd.DataFrame) -> tuple:
-    # for dataframe in dataframes:
+def validate_tables_m11(dataframe: pd.DataFrame):
+    """
+    validate tables from M-11
+    :param dataframe: parsed from M-11
+    :return:
+    if correct data, return tuple with 2 lists:
+        a first list is "coordinates" unvalidated cell (index, column),
+        a second list is reasons why unvalidated
+    if incorrect data, return ("Wrong", "Wrong")
+    """
     df_type = identify_df(dataframe)
-    # print(f"{df_type=}")
     if df_type == 1:
         return validate_dataframe_m11_1(dataframe)
     elif df_type == 2:

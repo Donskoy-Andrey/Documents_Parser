@@ -14,13 +14,6 @@ from documents_parser.parser.table_parser import table_ocr_m11, table_ocr_fmu76
 SRC_PATH = Path(__file__).parent / "src"
 DOWNLOAD_FILENAME = Path("data/file.pdf")
 
-
-def test():
-    df = pd.read_csv(SRC_PATH / "report.csv", index_col=0)
-    accepted = random.randint(0, 1)
-    return df
-
-
 class Gui:
     def __init__(self):
         """
@@ -126,9 +119,8 @@ class Gui:
 
     def draw_results_m11(self, df: pd.DataFrame, df_list: list) -> None:
         """
-        draw results of document parser func
-        :param df: df with results of from parser func
-        :param is_accept: returned status of parser func
+        Draw results of document parser func
+        :param df: df with results from a parser func
         :param df_list: returned list of dataframes with table data
         :return:
             None
@@ -146,12 +138,24 @@ class Gui:
             reasons_list.append(reason_t)
 
         def highlight_survived(s):
+            """
+            highlight unvalidated data
+            :param s: dataframe row
+            :return: Color for row
+            """
             return (
                 [''] * len(s) if s["Название"] not in unvalidated_row
                 else ['background-color: tomato;text-color: black;'] * len(s)
             )
 
-        def color_survived(val, df, unvalidated):
+        def color_survived(val, df: pd.DataFrame, unvalidated):
+            """
+            color unvalidated cells
+            :param val: value from cell
+            :param df: dataframe
+            :param unvalidated: list of unvalidated [(index, col)]
+            :return:
+            """
             color = 'background-color: tomato;text-color: black;'
             for coord in unvalidated:
                 index, col = coord[0], coord[1]
@@ -212,10 +216,9 @@ class Gui:
 
     def draw_results_fmu(self, df: pd.DataFrame, df_list: list) -> None:
         """
-        draw results of document parser func
-        :param df: df with results of from parser func
-        :param is_accept: returned status of parser func
-        :param df_list: returned list of dataframes with table data
+        Draw results of document parser func
+        :param df: df with results from a parser func
+        :param df_list: returned list with dataframes with table data
         :return:
             None
         """
@@ -294,7 +297,11 @@ class Gui:
                     logging.getLogger("dev").warning(e)
 
     def displayPDF(self, file):
-        # Opening file from file path
+        """
+        Opening file from a file path
+        :param file: path to file
+        :return:
+        """
         with open(file, "rb") as f:
             base64_pdf = base64.b64encode(f.read()).decode('utf-8')
 
