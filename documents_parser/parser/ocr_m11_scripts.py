@@ -5,11 +5,25 @@ import pytesseract
 from pdf2image import convert_from_path
 import cv2
 import numpy as np
+from documents_parser.utils.extraction import extract_text
+from PIL import Image
 
 logger = logging.getLogger("dev")
 
 
-def line_detector(page, threshold: int = 200) -> (list[list], dict):
+def line_detector(
+    page: Image, threshold: int = 200,
+    save_line_image: bool = False
+) -> (list[list], dict):
+    """
+    Find horizontal lines on the pruned image.
+
+    :param page: image
+    :param threshold: param in HoughLinesP
+    :param save_line_image: save figure with lines or not
+    :return:
+        list of lines coordinates, dict with lines info
+    """
     logger.info("Detect lines")
     page = cv2.cvtColor(np.array(page), cv2.COLOR_RGB2BGR)
     gray = cv2.cvtColor(page, cv2.COLOR_BGR2GRAY)
@@ -57,8 +71,10 @@ def line_detector(page, threshold: int = 200) -> (list[list], dict):
         )
 
     plt.figure(figsize=(15, 20))
-    plt.imshow(page)
-    plt.savefig("data/img.png")
+
+    if save_line_image:
+        plt.imshow(page)
+        plt.savefig("data/img.png")
 
     img = np.array(page)
     info = {}
@@ -77,31 +93,42 @@ def line_detector(page, threshold: int = 200) -> (list[list], dict):
     return clear_lines, info
 
 
-def extract_text(img) -> str:
-    text = pytesseract.image_to_string(img, lang='rus')
-    text = text.strip().replace("\n", " ").strip()
-    return text
-
-
 def parse_hat(img: np.ndarray) -> str | None:
+    """
+    Extract text from hat of the file
+
+    :param img: image
+    :return:
+        Extracted text
+    """
     hat = extract_text(img[30:170, 1000:1600])
-    # if "Типовая межотраслевая форма" not in hat:
-    #     print("No hat!")
-    #     return
-    # print(f"{hat = }")
     return hat
 
 
 def parse_number(img: np.ndarray) -> (str, int):
+    """
+    Parse number of file
+
+    :param img: image
+    :return:
+        Extracted number, y level
+    """
     y = 210
     text = extract_text(img[150:y, 400:1200])
-    name = text.split("№")[0].strip()
     number = (text.split("№")[1].strip())
-    # print(f"{name = }", f"{number = }")
     return number, y
 
 
-def parse_codes(up, down, img) -> dict:
+def parse_codes(up: int, down: int, img: np.ndarray) -> dict:
+    """
+    Parse tables with codes
+
+    :param up: above line
+    :param down: below line
+    :param img: image
+    :return:
+        dict with codes
+    """
     codes = extract_text(img[up: down, -390:-100])
     codes = codes.split()
     codes_dict = {
@@ -113,28 +140,48 @@ def parse_codes(up, down, img) -> dict:
 
 
 def parse_organisation(lines: list, img: np.ndarray) -> str:
+    """
+    Extract organisation from image
+
+    :param lines: list with all lines
+    :param img: image
+    :return:
+        Extracted text
+    """
     x1, y1, x2, y2 = lines[0]
     y1 -= 40
 
-    name = extract_text(img[y1:y2, 0:x1])
     organisation = extract_text(img[y1:y2, x1:x2])
-    # print(f"{name = }", f"{organisation = }")
     return organisation
 
 
 def parse_department(lines: list, img: np.ndarray) -> (str, int):
+    """
+    Extract department from image
+
+    :param lines: list with all lines
+    :param img: image
+    :return:
+        Extracted department, y level
+    """
     x1 = lines[0][0]
     y1 = lines[0][1]
     x2 = lines[1][2]
     y2 = lines[1][1]
 
-    name = extract_text(img[y1:y2, 0:x1])
     structure_department = extract_text(img[y1:y2, x1:x2])
-    # print(f"{name = }", f"{structure_department = }")
     return structure_department, y2
 
 
 def parse_via_who(img: np.ndarray, info: dict) -> str | None:
+    """
+    Extract `via whom` data.
+
+    :param img: image
+    :param info: dict with lines
+    :return:
+        Extracted text or None
+    """
     if info.get("Через кого") is None:
         return None
     x1, y1, x2, y2 = info.get("Через кого")
@@ -144,6 +191,14 @@ def parse_via_who(img: np.ndarray, info: dict) -> str | None:
 
 
 def parse_who_get(img: np.ndarray, info: dict) -> str | None:
+    """
+    Extract `who get` data.
+
+    :param img: image
+    :param info: dict with lines
+    :return:
+        Extracted text or None
+    """
     if info.get("Затребовал") is None:
         return None
     x1, y1, x2, y2 = info.get("Затребовал")
@@ -155,6 +210,14 @@ def parse_who_get(img: np.ndarray, info: dict) -> str | None:
 
 
 def parse_who_get_permission(img: np.ndarray, info: dict) -> str | None:
+    """
+    Extract `who get permission` data.
+
+    :param img: image
+    :param info: dict with lines
+    :return:
+        Extracted text or None
+    """
     if info.get("Разрешил") is None:
         return None
     x1, y1, x2, y2 = info.get("Разрешил")
@@ -172,18 +235,20 @@ def ocr_m11(pdf_path: str | None = None) -> pd.DataFrame:
         All text from file in pdf-pages.
     """
 
+    # Read file
     if pdf_path is None:
         raise ValueError("OCR should work with correct file path.")
-    filename = pdf_path.split("/")[-1]
 
     logger.info("Convert PDF file to image.")
     pages = convert_from_path(pdf_path)
     logger.info("Converting PDF file to image finished.")
 
+    # Extract first page
     page = pages[0]
     img = np.array(page)
     lines, info = line_detector(page)
 
+    # Parsing functions
     logger.info("1. Parsing hat")
     hat = parse_hat(img)
     logger.info("2. Parsing number")
@@ -201,11 +266,13 @@ def ocr_m11(pdf_path: str | None = None) -> pd.DataFrame:
     logger.info("8. Parsing who get permission")
     who_get_permission = parse_who_get_permission(img, info)
 
+    # Extract text from all pages
     text = ""
     for page in pages:
         img = np.array(page)
         text += pytesseract.image_to_string(img, lang='rus')
 
+    # Find additional statistics from all text
     doc_info = {}
     for line in text.split("\n"):
         if "Документа сбыта" in line:
@@ -215,6 +282,7 @@ def ocr_m11(pdf_path: str | None = None) -> pd.DataFrame:
         if "Бухгалтерский документ" in line:
             doc_info["Бухгалтерский документ"] = line.split(":")[1].strip()
 
+    # Create report
     report = pd.DataFrame({
         "Тип формы": [hat],
         "Требование-накладная": [number],

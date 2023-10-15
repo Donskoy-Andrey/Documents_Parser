@@ -1,10 +1,11 @@
-from sys import argv
-from .parser.ocr_m11_scripts import ocr_m11
-from .parser.ocr_fmu76_scripts import ocr_fmu76
-from .parser.table_parser import table_ocr_m11
 import logging
+from sys import argv
+from documents_parser.parser.ocr_m11_scripts import ocr_m11
+from documents_parser.parser.ocr_fmu76_scripts import ocr_fmu76
+from documents_parser.parser.table_parser import table_ocr_m11
 
 
+# Set up logger
 logger = logging.getLogger("dev")
 logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
