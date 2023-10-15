@@ -28,7 +28,13 @@ columns_table2_fmu76 = ['Технический счет 32 "Затраты"', '
                       'Регистрационный номерпартии товара,подлежащего прослеживаемости']
 
 
-def table_ocr_m11(path: str | None) -> list[pd.DataFrame]:
+def table_ocr_m11(path: str | None) -> list[pd.DataFrame,pd.DataFrame]:
+    """
+    Obtaining and correcting tables in the M-11 file
+    :param path: file path
+    :return:
+        list from a table in DataFrame format
+    """
     if path is None:
         logging.critical('Неверный путь')
         return []
@@ -62,7 +68,13 @@ def table_ocr_m11(path: str | None) -> list[pd.DataFrame]:
     return clear_dataframe(tables[:2])
 
 
-def table_ocr_fmu76(path: str | None) -> list[pd.DataFrame]:
+def table_ocr_fmu76(path: str | None) -> list[pd.DataFrame,pd.DataFrame]:
+    """
+    Obtaining and correcting tables in the FMU-76 file
+    :param path: file path
+    :return:
+        list from a table in DataFrame format
+    """
     tables = camelot.read_pdf(path, pages='all')
     tables = tables[:-1]
     tables = [tabl.df for tabl in tables]
@@ -99,7 +111,13 @@ def table_ocr_fmu76(path: str | None) -> list[pd.DataFrame]:
     return clear_dataframe(tables[:2])
 
 
-def clear_dataframe(tables: list[pd.DataFrame]) -> list[pd.DataFrame]:
+def clear_dataframe(tables: list[pd.DataFrame,pd.DataFrame]) -> list[pd.DataFrame,pd.DataFrame]:
+    """
+    Clear DataFrame
+    :param tables:  list from a table in DataFrame
+    :return:
+        list from a table in DataFrame
+    """
     tables = [
         table.replace('\n', '', regex=True)
         for table in tables

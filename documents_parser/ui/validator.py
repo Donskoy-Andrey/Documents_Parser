@@ -57,9 +57,10 @@ def check_float(candidate: Any) -> bool:
 
 def validate_raw_data_m11(dataframe: pd.DataFrame) -> Tuple[list[Hashable], list[str]]:
     """
-
-    :param dataframe: column: "Значение"
-    :return: list of indexes with wrong col, list of reasons
+    Validation of values in the FMU-76 document
+    :param dataframe: column: "Значение" values in the FMU-76 document
+    :return:
+        list of indexes with wrong col, list of reasons
     """
     unvalidated: list[Hashable] = []
     reasons: list[str] = []
@@ -160,12 +161,12 @@ def validate_dataframe_m11_1(dataframe: pd.DataFrame):
             cols = [col for col in dataframe.columns if "Отправитель" in col]
             for col in cols:
                 unvalidated.append((index, col))
-            reasons.append("Нет данных об отправителе")
+            reasons.append("Нет данных о отправителе")
         if not receiver_info:
             cols = [col for col in dataframe.columns if "Получатель" in col]
             for col in cols:
                 unvalidated.append((index, col))
-            reasons.append("Нет данных об получателе")
+            reasons.append("Нет данных о получателе")
 
         corresponding_account = [col for col in dataframe.columns if "Корреспондирующий счет" in col]
         for col in corresponding_account:
@@ -246,13 +247,20 @@ def check_type_from(value: str) -> bool:
 
 
 def check_structure_department(value: str) -> bool:
-    if "Северо- Кавказской" in value:
+    if "Север" in value and "Кавказ" in value:
         return True
     else:
         return False
 
 
 def check_post(value: str) -> bool:
+    """
+    Validation of the position by whom the document FMU-76 was approved.
+    The document cannot be validated by anyone other than the supervisor.
+    :param value: position
+    :return:
+        True if the supervisor
+    """
     if "Начальник" in value:
         return True
     else:
@@ -260,6 +268,14 @@ def check_post(value: str) -> bool:
 
 
 def check_name(value: str) -> bool:
+    """
+    Validation of correctness of filling
+    in the full name in the FMU-76 document
+
+    :param value: full name
+    :return:
+        True if everything is correct.
+    """
     names = value.split(' ')
     for i in names:
         if len(i) <= 1 or i[0] == i[0].lower():
@@ -268,6 +284,7 @@ def check_name(value: str) -> bool:
 
 
 def validate_raw_fmu_76(dataframe: pd.DataFrame) -> tuple[list, list]:
+
     unvalidated = []
     reasons = []
     col_name = "Значение"

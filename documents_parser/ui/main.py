@@ -239,6 +239,7 @@ class Gui:
 
         def color_survived(val, df, unvalidated):
             color = 'background-color: tomato;text-color: black;'
+
             for coord in unvalidated:
                 index, col = coord[0], coord[1]
                 if df.loc[index, col] == val:
