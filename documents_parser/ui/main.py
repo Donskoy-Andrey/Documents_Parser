@@ -1,10 +1,8 @@
 import logging
-
 import pandas as pd
 import streamlit as st
 from pathlib import Path
 import base64
-import random
 from documents_parser.ui.validator import validate_tables_m11, validate_raw_data_m11
 from documents_parser.ui.validator import validate_tables_fmu_76, validate_raw_fmu_76
 from documents_parser.parser.ocr_m11_scripts import ocr_m11
@@ -14,10 +12,11 @@ from documents_parser.parser.table_parser import table_ocr_m11, table_ocr_fmu76
 SRC_PATH = Path(__file__).parent / "src"
 DOWNLOAD_FILENAME = Path("data/file.pdf")
 
+
 class Gui:
     def __init__(self):
         """
-        initialize the class Gui
+        Initialize the class Gui
         """
         st.set_page_config(layout='wide')
 
@@ -37,8 +36,10 @@ class Gui:
 
     def __draw_gui(self) -> None:
         """
-        draw base widgets of UI
-        :return: None
+        Draw base widgets of UI
+
+        :return:
+            None
         """
         with self.head_container:
             title, logo = st.columns([5, 1])
@@ -65,7 +66,9 @@ class Gui:
     def draw_choose_file(self) -> None:
         """
         Draw choose file widget
-        :return: None
+
+        :return:
+            None
         """
         with self.upload_container:
             self.uploaded_file = st.file_uploader(
@@ -87,19 +90,22 @@ class Gui:
     def run_file_processing(self) -> None:
         """
         Activate functions, reaction on click of check_button
-        :return: None
+
+        :return:
+            None
         """
         self.button_disabled = True
 
         with open(DOWNLOAD_FILENAME, 'wb+') as f:
             # save file to local machine
             f.write(self.uploaded_file.read())
-        # gif_path = "https://donskow.com/g"
+
         gif_path = "https://donskow.com/train4"
         with self.button_container:
             # loading gif :)
             gif_runner = st.image(gif_path)
-        print(f"{self.option=}")
+
+        logging.getLogger("dev").info(f"{self.option=}")
         if self.option == "М-11":
             df = ocr_m11(pdf_path=str(DOWNLOAD_FILENAME))
             df_list = table_ocr_m11(path=str(DOWNLOAD_FILENAME))
@@ -120,6 +126,7 @@ class Gui:
     def draw_results_m11(self, df: pd.DataFrame, df_list: list) -> None:
         """
         Draw results of document parser func
+
         :param df: df with results from a parser func
         :param df_list: returned list of dataframes with table data
         :return:
@@ -139,22 +146,26 @@ class Gui:
 
         def highlight_survived(s):
             """
-            highlight unvalidated data
+            Highlight unvalidated data
+
             :param s: dataframe row
-            :return: Color for row
+            :return:
+                Color for row
             """
             return (
                 [''] * len(s) if s["Название"] not in unvalidated_row
                 else ['background-color: tomato;text-color: black;'] * len(s)
             )
 
-        def color_survived(val, df: pd.DataFrame, unvalidated):
+        def color_survived(val, df: pd.DataFrame, unvalidated) -> str:
             """
-            color unvalidated cells
+            Color unvalidated cells
+
             :param val: value from cell
             :param df: dataframe
             :param unvalidated: list of unvalidated [(index, col)]
             :return:
+                Color html code
             """
             color = 'background-color: tomato;text-color: black;'
             for coord in unvalidated:
@@ -168,7 +179,6 @@ class Gui:
                 self.data_container.markdown(
                     '<h2 style="color:white;background-color:green;text-align:center">Принято</h2>',
                     unsafe_allow_html=True)
-                # self.data_container.markdown('_____', )
             else:
                 self.data_container.markdown(
                     '<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>',
@@ -194,7 +204,6 @@ class Gui:
         self.data_container.markdown('<h1 style="text-align:center">Отчет<h1>', unsafe_allow_html=True)
         if isinstance(df, pd.DataFrame):
             self.data_container.dataframe(
-                # df.style.set_properties(**{"background-color": "black", "color": "lawngreen"}),
                 df.style.apply(highlight_survived, axis=1),
                 use_container_width=True,
                 height=500,
@@ -212,11 +221,11 @@ class Gui:
 
                 except Exception as e:
                     logging.getLogger("dev").warning(e)
-                    # raise e
 
     def draw_results_fmu(self, df: pd.DataFrame, df_list: list) -> None:
         """
         Draw results of document parser func
+
         :param df: df with results from a parser func
         :param df_list: returned list with dataframes with table data
         :return:
@@ -253,12 +262,13 @@ class Gui:
             if is_accept == 0:
                 self.data_container.markdown(
                     '<h2 style="color:white;background-color:green;text-align:center">Принято</h2>',
-                    unsafe_allow_html=True)
-                # self.data_container.markdown('_____', )
+                    unsafe_allow_html=True
+                )
             else:
                 self.data_container.markdown(
                     '<h2 style="color:white;background-color:red;text-align:center">Отклонено</h2>',
-                    unsafe_allow_html=True)
+                    unsafe_allow_html=True
+                )
 
         with self.data_container:
             if len(reasons_row+reasons_list) != 0:
@@ -279,12 +289,12 @@ class Gui:
         self.data_container.markdown('<h1 style="text-align:center">Отчет<h1>', unsafe_allow_html=True)
         if isinstance(df, pd.DataFrame):
             self.data_container.dataframe(
-                # df.style.set_properties(**{"background-color": "black", "color": "lawngreen"}),
                 df.style.apply(highlight_survived, axis=1),
                 use_container_width=True,
                 height=500,
                 hide_index=True
             )
+
         with self.data_container:
             for i in range(len(df_list)):
                 try:
@@ -297,17 +307,19 @@ class Gui:
                 except Exception as e:
                     logging.getLogger("dev").warning(e)
 
-    def displayPDF(self, file):
+    def displayPDF(self, file: str | Path) -> None:
         """
         Opening file from a file path
+
         :param file: path to file
         :return:
+            None
         """
         with open(file, "rb") as f:
             base64_pdf = base64.b64encode(f.read()).decode('utf-8')
 
         # Embedding PDF in HTML
-        pdf_display = F'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
+        pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
         with self.button_container:
             # Displaying File
             st.markdown(pdf_display, unsafe_allow_html=True)

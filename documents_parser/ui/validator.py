@@ -4,35 +4,23 @@ from numpy import isnan
 import datetime
 
 ORGANIZATION_TYPES = [
-    "ОАО",
-    "ООО",
-    "ЗАО",
-    "ПАО",
-    "НКО",
-    "ГК",
-    "АО",
-    "ТСЖ",
-    "КФХ",
-    "ИП",
-    "АНО",
-    "НП",
-    "ОП",
-    "ФГУП",
-    "ФСК",
-    "ФСБ",
-    "ФСС",
-    "ФСТЭК"
+    "ОАО", "ООО", "ЗАО", "ПАО",
+    "НКО", "ГК", "АО", "ТСЖ",
+    "КФХ", "ИП", "АНО", "НП",
+    "ОП", "ФГУП", "ФСК", "ФСБ",
+    "ФСС", "ФСТЭК"
 ]
 
 
 def check_organization(value: str) -> bool:
     """
+    Validate organisation
 
     :param value:
-    :return: return False if wrong organization name
+    :return:
+        return False if wrong organisation name
     """
 
-    if_cor_type = False
     for org_type in ORGANIZATION_TYPES:
         if org_type in value:
             return True
@@ -41,8 +29,11 @@ def check_organization(value: str) -> bool:
 
 def check_float(candidate: Any) -> bool:
     """
+    Check if float
+
     :param candidate:
-    :return: True if the candidate can be floated
+    :return:
+        True if the candidate can be floated
     """
     try:
         if isnan(float(candidate)):
@@ -57,8 +48,9 @@ def check_float(candidate: Any) -> bool:
 
 def validate_raw_data_m11(dataframe: pd.DataFrame) -> Tuple[list, list[str]]:
     """
-    Validation of values in the FMU-76 document
-    :param dataframe: column: "Значение" values in the FMU-76 document
+    Validation of values in the M-11 document
+
+    :param dataframe: column: `Значение` values in the FMU-76 document
     :return:
         list of indexes with wrong col, list of reasons
     """
@@ -107,9 +99,11 @@ def validate_raw_data_m11(dataframe: pd.DataFrame) -> Tuple[list, list[str]]:
 
 def identify_df(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
     """
-    identify a type of dataframe on document M-11
+    Identify a type of dataframe on document M-11
+
     :param dataframe: parsed from document M-11
     :return:
+        One of the 1, 2, 3
     """
     if dataframe.columns[0] in ["Дата составления", "Дата\nсоставления"]:
         return 1
@@ -120,9 +114,11 @@ def identify_df(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
 
 def check_date(date: str) -> bool:
     """
-    check if date in format dd.mm.yyyy
+    Check if date in format dd.mm.yyyy
+
     :param date: string
-    :return: true if date is valid, false otherwise
+    :return:
+        true if date is valid, false otherwise
     """
     try:
         day, month, year = date.split(".")
@@ -143,18 +139,18 @@ def check_date(date: str) -> bool:
 
 def validate_dataframe_m11_1(dataframe: pd.DataFrame) -> Tuple[list, list]:
     """
-    validate table from document M-11 (type 1)
+    Validate table from document M-11 (type 1)
     use function identify_df to get type
+
     :param dataframe: parsed from a document
     :return:
-     two lists: a first list is "coordinates" unvalidated cell (index, column),
-     a second list is reasons why unvalidated
+        two lists: a first list is "coordinates" unvalidated cell (index, column),
+        a second list is reasons why unvalidated
     """
     reasons = []
     unvalidated = []
 
     for index, row in dataframe.iterrows():
-        # print(f"{index=} {row=}")
         # validate date
         if not check_date(row["Дата составления"]):
             unvalidated.append((index, "Дата составления"))
@@ -163,7 +159,7 @@ def validate_dataframe_m11_1(dataframe: pd.DataFrame) -> Tuple[list, list]:
         if not row["Код вида операции"].isdigit():
             unvalidated.append((index, "Код вида операции"))
             reasons.append("Неверный код вида операции")
-        # validate sender and receiver ==================================
+        # validate sender and receiver
         sender_fields = [row[col] for col in dataframe.columns if "Отправитель" in col]
         receiver_fields = [row[col] for col in dataframe.columns if "Получатель" in col]
         sender_info = False
@@ -199,12 +195,13 @@ def validate_dataframe_m11_1(dataframe: pd.DataFrame) -> Tuple[list, list]:
 
 def validate_dataframe_m11_2(dataframe: pd.DataFrame):
     """
-    validate table from document M-11 (type 2)
+    Validate table from document M-11 (type 2)
     (use function ```identify_df``` to get type)
+
     :param dataframe: parsed from a document
     :return:
-     two lists: a first list is "coordinates" unvalidated cell (index, column),
-     a second list is reasons why unvalidated
+        two lists: a first list is "coordinates" unvalidated cell (index, column),
+        a second list is reasons why unvalidated
     """
     reasons = []
     unvalidated = []
@@ -254,13 +251,14 @@ def validate_dataframe_m11_2(dataframe: pd.DataFrame):
 
 def validate_tables_m11(dataframe: pd.DataFrame):
     """
-    validate tables from M-11
+    Validate tables from M-11
+
     :param dataframe: parsed from M-11
     :return:
-    if correct data, return tuple with 2 lists:
-        a first list is "coordinates" unvalidated cell (index, column),
-        a second list is reasons why unvalidated
-    if incorrect data, return ("Wrong", "Wrong")
+        if correct data, return tuple with 2 lists:
+            a first list is "coordinates" unvalidated cell (index, column),
+            a second list is reasons why unvalidated
+        if incorrect data, return ("Wrong", "Wrong")
     """
     df_type = identify_df(dataframe)
     if df_type == 1:
@@ -272,6 +270,13 @@ def validate_tables_m11(dataframe: pd.DataFrame):
 
 
 def check_type_from(value: str) -> bool:
+    """
+    Validate form type
+
+    :param value: cell value
+    :return:
+        Correct or not
+    """
     if "Специализированная форма № ФМУ-76" in value:
         return True
     else:
@@ -279,6 +284,14 @@ def check_type_from(value: str) -> bool:
 
 
 def check_structure_department(value: str) -> bool:
+    """
+    Validate structure department value
+
+    :param value: cell value
+    :return:
+        Correct or not
+    """
+
     if "Север" in value and "Кавказ" in value:
         return True
     else:
@@ -289,6 +302,7 @@ def check_post(value: str) -> bool:
     """
     Validation of the position by whom the document FMU-76 was approved.
     The document cannot be validated by anyone other than the supervisor.
+
     :param value: position
     :return:
         True if the supervisor
@@ -316,7 +330,13 @@ def check_name(value: str) -> bool:
 
 
 def validate_raw_fmu_76(dataframe: pd.DataFrame) -> tuple[list, list]:
+    """
+    Validate raw FMU-76 table
 
+    :param dataframe: column: `Значение` values in the FMU-76 document
+    :return:
+        list of indexes with wrong col, list of reasons
+    """
     unvalidated = []
     reasons = []
     col_name = "Значение"
@@ -371,8 +391,10 @@ def validate_raw_fmu_76(dataframe: pd.DataFrame) -> tuple[list, list]:
 def identify_df_fmu(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
     """
     identify a type of dataframe on document ФМУ-76
+
     :param dataframe: parsed from document ФМУ-76
     :return:
+        One of the 1, 2, 3
     """
     if dataframe.columns[0] in ["Структурное подразделение (цех, участок и др.)"]:
         return 1
@@ -384,11 +406,12 @@ def identify_df_fmu(dataframe: pd.DataFrame) -> Literal[1, 2, 3]:
 def validate_dataframe_fmu_1(df: pd.DataFrame):
     """
     validate table from document ФМУ-76(type 1)
-    (use function ```identify_df``` to get type)
+    (use function `identify_df` to get type)
+
     :param df: parsed from a document
     :return:
-     two lists: a first list is "coordinates" unvalidated cell (index, column),
-     a second list is reasons why unvalidated
+         two lists: a first list is "coordinates" unvalidated cell (index, column),
+         a second list is reasons why unvalidated
     """
     reasons = []
     unvalidated = []
@@ -412,16 +435,15 @@ def validate_dataframe_fmu_1(df: pd.DataFrame):
     return unvalidated, reasons
 
 
-
-
 def validate_dataframe_fmu_2(df: pd.DataFrame):
     """
     validate table from document ФМУ-76(type 2)
-    (use function ```identify_df``` to get type)
+    (use function `identify_df` to get type)
+
     :param df: parsed from a document
     :return:
-     two lists: a first list is "coordinates" unvalidated cell (index, column),
-     a second list is reasons why unvalidated
+         two lists: a first list is `coordinates` unvalidated cell (index, column),
+         a second list is reasons why unvalidated
     """
     reasons = []
     unvalidated = []
@@ -475,17 +497,16 @@ def validate_dataframe_fmu_2(df: pd.DataFrame):
 
 def validate_tables_fmu_76(dataframe: pd.DataFrame):
     """
-    validate tables from ФМУ-76
+    Validate tables from ФМУ-76
+
     :param dataframe: parsed from ФМУ-76
     :return:
-    if correct data, return tuple with 2 lists:
-        a first list is "coordinates" unvalidated cell (index, column),
-        a second list is reasons why unvalidated
-    if incorrect data, return ("Wrong", "Wrong")
+        if correct data, return tuple with 2 lists:
+            a first list is "coordinates" unvalidated cell (index, column),
+            a second list is reasons why unvalidated
+        if incorrect data, return ("Wrong", "Wrong")
     """
-
     df_type = identify_df_fmu(dataframe)
-    # print(f"{df_type=}")
     if df_type == 1:
         return validate_dataframe_fmu_1(dataframe)
     elif df_type == 2:
@@ -494,7 +515,5 @@ def validate_tables_fmu_76(dataframe: pd.DataFrame):
         return "Wrong", "Wrong"
 
 
-
 if __name__ == '__main__':
-    df = pd.read_csv('src/report.csv', index_col=0)
-    # print(validate(df))
+    pass
